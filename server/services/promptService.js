@@ -108,11 +108,53 @@ const getArchivePrompts = async (page = 1, limit = 10) => {
   return data;
 };
 
+/**
+ * Creates a new prompt.
+ * Ticket requirements: validate required fields, prevent duplicate prompt dates.
+ */
+const createPrompt = async (promptData) => {
+  // Pull out the pieces of data the user sent us
+  const { title, prompt_text, prompt_date, category } = promptData;
+
+  // 1. Validate required fields
+  if (!title || !prompt_text || !prompt_date) {
+    throw new Error('Missing required fields: title, prompt_text, and prompt_date are required.');
+  }
+
+  // 2. Prevent duplicate dates
+  // Ask the database if a prompt with this exact date already exists
+  const { data: existingPrompt } = await supabase
+    .from('prompts')
+    .select('id')
+    .eq('prompt_date', prompt_date)
+    .single();
+
+  if (existingPrompt) {
+    throw new Error('A prompt already exists for this date.');
+  }
+
+  // 3. If it passes those checks, insert the new prompt into the database!
+  const { data, error } = await supabase
+    .from('prompts')
+    .insert([
+      { title, prompt_text, prompt_date, category }
+    ])
+    .select()    // Tell Supabase to hand the new row back to us
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
 // Export ALL functions here at the very bottom
 module.exports = {
   getTodayPrompt,
   getPromptById,
   getPromptByDate,
-  getArchivePrompts   
+  getArchivePrompts,
+  createPrompt   
 };
 
