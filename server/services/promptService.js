@@ -28,33 +28,47 @@ const getTodayPrompt = async () => {
     .single();                   // We only expect exactly 1 result
 
   // ATTEMPT 2: The Fallback
-  // PGRST116 is Supabase's specific error code for "I found 0 rows"
   if (error && error.code === 'PGRST116') { 
-    // Ask the database for the most recent prompt instead
     const fallback = await supabase
       .from('prompts')
       .select('*')
-      .lte('prompt_date', today)                  // Less Than or Equal to today
-      .order('prompt_date', { ascending: false }) // Sort newest to oldest
-      .limit(1)                                   // Grab just the top 1 result
+      .lte('prompt_date', today)                  
+      .order('prompt_date', { ascending: false }) 
+      .limit(1)                                   
       .single();
       
-    // Overwrite our initial empty variables with this new fallback data
     data = fallback.data;
     error = fallback.error;
   }
 
   // ERROR HANDLING
-  // If there's an actual database error (not just missing data), throw it
   if (error && error.code !== 'PGRST116') {
     throw new Error(error.message);
   }
 
-  // Send the found prompt back to whoever asked for it
   return data;
 };
 
-// Export the function so other files (like our Controller) can use it
+/**
+ * Fetches a specific prompt by its ID.
+ */
+const getPromptById = async (id) => {
+  const { data, error } = await supabase
+    .from('prompts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  // PGRST116 means zero rows found. We ignore it so we can send a 404 later.
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(error.message);
+  }
+
+  return data; 
+};
+
+// Export ALL functions here at the very bottom!
 module.exports = {
-  getTodayPrompt
+  getTodayPrompt,
+  getPromptById
 };
