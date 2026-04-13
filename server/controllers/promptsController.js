@@ -43,8 +43,32 @@ const getPromptById = async (req, res) => {
   }
 };
 
+/**
+ * Waiter function to handle requests for a specific prompt by date.
+ */
+const getPromptByDate = async (req, res) => {
+  try {
+    // req.params pulls the dynamic date directly out of the URL string
+    // Example: /api/prompts/date/2026-03-30 -> req.params.date will be "2026-03-30"
+    const { date } = req.params;
+    
+    // Ask the Chef to find the prompt with this specific date
+    const prompt = await promptService.getPromptByDate(date);
+
+    if (prompt) {
+      res.status(200).json(prompt);
+    } else {
+      res.status(404).json({ error: 'Prompt not found for this date.' });
+    }
+  } catch (error) {
+    console.error("Error in getPromptByDate controller:", error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 // Export ALL Waiter functions so the Host (Routes) can assign them
 module.exports = {
   getTodayPrompt,
-  getPromptById
+  getPromptById,
+  getPromptByDate
 };
