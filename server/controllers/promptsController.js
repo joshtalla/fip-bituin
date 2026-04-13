@@ -66,9 +66,33 @@ const getPromptByDate = async (req, res) => {
   }
 };
 
+/**
+ * Waiter function to handle requests for the prompts archive (with pagination).
+ */
+const getArchivePrompts = async (req, res) => {
+  try {
+    // req.query pulls variables from the end of the URL (after the '?')
+    // We also set default values (page 1, limit 10) just in case the frontend forgets to send them
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    
+    // Ask the Chef to get the specific page of prompts
+    const prompts = await promptService.getArchivePrompts(page, limit);
+
+    // For arrays (lists of data), an empty result is just [], not null/undefined
+    // So we can just return it directly with a 200 status
+    res.status(200).json(prompts);
+
+  } catch (error) {
+    console.error("Error in getArchivePrompts controller:", error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 // Export ALL Waiter functions so the Host (Routes) can assign them
 module.exports = {
   getTodayPrompt,
   getPromptById,
-  getPromptByDate
+  getPromptByDate,
+  getArchivePrompts
 };
