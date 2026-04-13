@@ -85,10 +85,34 @@ const getPromptByDate = async (date) => {
   return data; 
 };
 
+/**
+ * Fetches past prompts with pagination.
+ * Ticket requirement: sort archive by newest first.
+ */
+const getArchivePrompts = async (page = 1, limit = 10) => {
+  // Calculate the database range based on the page and limit
+  // Example: Page 1, Limit 10 means we want items 0 through 9.
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error } = await supabase
+    .from('prompts')
+    .select('*')
+    .order('prompt_date', { ascending: false }) // Sort newest to oldest
+    .range(from, to);                           // Apply our pagination math
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
 // Export ALL functions here at the very bottom
 module.exports = {
   getTodayPrompt,
   getPromptById,
-  getPromptByDate   
+  getPromptByDate,
+  getArchivePrompts   
 };
 
