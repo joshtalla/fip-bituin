@@ -67,8 +67,28 @@ const getPromptById = async (id) => {
   return data; 
 };
 
-// Export ALL functions here at the very bottom!
+/**
+ * Fetches a specific prompt by its date (YYYY-MM-DD).
+ */
+const getPromptByDate = async (date) => {
+  const { data, error } = await supabase
+    .from('prompts')
+    .select('*')
+    .eq('prompt_date', date)
+    .single();
+
+  // PGRST116 means zero rows found. We ignore it so we can send a 404 later.
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(error.message);
+  }
+
+  return data; 
+};
+
+// Export ALL functions here at the very bottom
 module.exports = {
   getTodayPrompt,
-  getPromptById
+  getPromptById,
+  getPromptByDate   
 };
+
