@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 
 const locations = [
@@ -20,6 +21,7 @@ const languages = [
 ];
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [locationOpen, setLocationOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -36,7 +38,12 @@ export default function Signup() {
             <p className="signup-subtext">fill out all fields below.</p>
           </div>
 
-          <button className="signup-back" type="button" aria-label="Go back">
+          <button 
+          className="signup-back" 
+          type="button" 
+          aria-label="Go back"
+          onClick={() => navigate("/login")}
+          >
             <svg
               className="signup-back-icon"
               viewBox="0 0 58 58"

@@ -1,5 +1,6 @@
 import "./Auth.css";
 import bituinLogo from "../assets/bituin-logo.svg";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   return (
@@ -31,7 +32,7 @@ export default function Login() {
           <div className="auth-footer">
             <div className="auth-link">
               <span>new?</span>
-              <a href="/signup">sign up!</a>
+              <Link to="/signup">sign up!</Link>
             </div>
 
             <button className="auth-button">login</button>
