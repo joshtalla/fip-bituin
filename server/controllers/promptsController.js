@@ -89,10 +89,34 @@ const getArchivePrompts = async (req, res) => {
   }
 };
 
+/**
+ * Waiter function to handle creating a new prompt (POST request).
+ */
+const createPrompt = async (req, res) => {
+  try {
+    // For POST requests, the data comes in the "body" of the request
+    const promptData = req.body;
+
+    // Ask the Chef to create this new prompt
+    const newPrompt = await promptService.createPrompt(promptData);
+
+    // 201 is the specific HTTP status code for "Created successfully"
+    res.status(201).json(newPrompt);
+
+  } catch (error) {
+    console.error("Error in createPrompt controller:", error.message);
+    
+    // If the error was our custom validation error (missing fields or duplicate date),
+    // we send a 400 Bad Request to tell the frontend they messed up the form.
+    res.status(400).json({ error: error.message });
+  }
+};
+
 // Export ALL Waiter functions so the Host (Routes) can assign them
 module.exports = {
   getTodayPrompt,
   getPromptById,
   getPromptByDate,
-  getArchivePrompts
+  getArchivePrompts,
+  createPrompt
 };
