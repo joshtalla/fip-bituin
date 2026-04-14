@@ -35,9 +35,11 @@ function CTAButton({ onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="h-[50px] w-[338px] rounded-md bg-[#EFB758] px-4 py-2 font-poppins text-[16px] font-semibold text-[#765C5F] transition-all duration-300 hover:bg-[#765C5F] hover:text-[#EFB758] hover:shadow-md"
+      className="h-[50px] w-[338px] rounded-md bg-[#EFB758] px-4 py-2 font-poppins text-[16px] font-semibold text-[#765C5F] transition-all duration-300 hover:bg-[#FBF3E5] hover:text-[#EFB758] hover:shadow-md"
     >
-      <span className="text-center">ilagay ang iyong bituin</span>
+      <span className="text-center text-[24px] text-[#4C383A] font-darumadropone">
+        ilagay ang iyong bituin
+      </span>
     </button>
   );
 }
