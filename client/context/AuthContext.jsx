@@ -10,36 +10,39 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Read the current session once when the app loads.
-        const getIntialSession = async () => {
-            const { data: session } = await supabase.auth.getSession();
+        // 1. Check for an active session immediately when the app loads
+        const getInitialSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
 
-            if(session) {
-                await fetchUserProfile(session.user);
+            if (session) {
+                await fetchProfile(session.user.id);
             } else {
                 setLoading(false);
             }
         };
 
-        getIntialSession();
+        getInitialSession();
 
+        // 2. Set up the listener to watch for future changes (Login/Logout)
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("Auth state changed:", event, session);
+            console.log("Auth Event:", event);
 
             if (session) {
-                await fetchUserProfile(session.user.id);
+                await fetchProfile(session.user.id);
             } else {
                 setUser(null);
                 setLoading(false);
             }
         });
 
-            return () => {
-                authListener.subscription.unsubscribe();
-            };
+        // Cleanup: Stop listening if the component is destroyed
+        return () => {
+            authListener.subscription.unsubscribe();
+        };
     }, []);
 
-    const fetchUserProfile = async (userId) => {
+    // 3. Helper function to fetch your custom user profile from the users table
+    const fetchProfile = async (userId) => {
         try {
             const { data, error } = await supabase
                 .from('users')
@@ -53,7 +56,7 @@ export const AuthProvider = ({ children }) => {
 
             setUser(data);
         } catch (error) {
-            console.error("Error fetching user profile:", error);
+            console.error("Error fetching profile:", error.message);
         } finally {
             setLoading(false);
         }
