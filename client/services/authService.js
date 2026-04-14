@@ -26,7 +26,7 @@ export const signUp = async (email, password) => {
     return data;
 };
 
-// Sign-in/og-in an existing user with EMAIL and PASSWORD
+// Sign-in/log-in an existing user with EMAIL and PASSWORD
 export const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
