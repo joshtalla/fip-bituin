@@ -1,10 +1,16 @@
+import Navbar from '../components/Navbar'
+
 const Search = () => {
     return(
-    <div>
-        <h2>
-            Search
-        </h2>
-    </div>);
+        <>
+        <Navbar />
+            <div>
+                <h2>
+                    Search
+                </h2>
+            </div>
+        </>
+    );
 }
 
 export default Search;
