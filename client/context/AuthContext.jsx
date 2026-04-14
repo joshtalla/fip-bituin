@@ -1,49 +1,68 @@
 import { createContext, useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 
-// Shared auth context so any component can read the current signed-in user.
+/**
+ * AuthContext
+ * 
+ * Provides user authentication state across the entire app.
+ * Any component can read: 'user' (the logged-in user's profile, or null), and 'loading' (whether auth is still checking).
+ * 
+ * Usage: Wrap the <App /> with <AuthProvider>, then use useContext(AuthContext) in any child component.
+ */
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    // Stores the active Supabase user object, or null when nobody is signed in.
+    // The logged-in user's profile from the database(it is null if the user is not logged/signed in).
     const [user, setUser] = useState(null);
+
+    // Shows whether we're still checking for a saved login when user goes onto website for the first time in a while.
+    // Prevents showing the login screen and then quickly switching to the home screen.
     const [loading, setLoading] = useState(true);
 
+    // On page load, check if the user is already logged in.
+    // Then listen for any login/logout changes while the page is open.
     useEffect(() => {
-        // 1. Check for an active session immediately when the app loads
+        // Check if there's a saved login from a previous session.
         const getInitialSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
 
             if (session) {
+                // User is logged in, fetch their profile from the database.
                 await fetchProfile(session.user.id);
             } else {
+                // No saved login. Stop loading and show the login screen.
                 setLoading(false);
             }
         };
 
         getInitialSession();
 
-        // 2. Set up the listener to watch for future changes (Login/Logout)
+        // Watch for login/logout events (even if they happen in another browser tab).
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+            // Examples: 'SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED'
             console.log("Auth Event:", event);
 
             if (session) {
+                // User logged in, fetch their profile.
                 await fetchProfile(session.user.id);
             } else {
+                // User logged out, clear the profile.
                 setUser(null);
                 setLoading(false);
             }
         });
 
-        // Cleanup: Stop listening if the component is destroyed
+        // Stop watching for changes when the page closes.
         return () => {
             authListener.subscription.unsubscribe();
         };
     }, []);
 
-    // 3. Helper function to fetch your custom user profile from the users table
+    // Load the user's profile from the database.
+    // Gets called after login to retrieve the full user data (username, avatar, etc.).
     const fetchProfile = async (userId) => {
         try {
+            // Ask the database for this user's profile.
             const { data, error } = await supabase
                 .from('users')
                 .select('*')
@@ -54,19 +73,21 @@ export const AuthProvider = ({ children }) => {
                 throw error;
             }
 
+            // Save the profile so the app can access it.
             setUser(data);
         } catch (error) {
+            // The database query failed or the profile doesn't exist.
             console.error("Error fetching profile:", error.message);
         } finally {
+            // Finish loading, whether it succeeded or failed.
             setLoading(false);
         }
     };
 
-    // Provide the current user state to every component wrapped by this provider.
+    // Share the user and loading state with all child components.
     return (
         <AuthContext.Provider value={{ user, loading }}>
             {children}
         </AuthContext.Provider>
     );
 }
-
