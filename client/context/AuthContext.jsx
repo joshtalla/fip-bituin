@@ -63,3 +63,23 @@ useEffect(() => {
             authListener.subscription.unsubscribe();
         };
 }, []);
+
+const fetchUserProfile = async (userId) => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        setUser(data);
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+    } finally {
+        setLoading(false);
+    }
+};
