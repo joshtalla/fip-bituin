@@ -4,7 +4,7 @@ import { supabase } from '../services/supabaseClient';
 /**
  * AuthContext
  * 
- * Provides user authentication state across the entire app.
+ * Provides user authentication state across the entire app. Each unique page doesn't need to check if the user is logged in.
  * Any component can read: 'user' (the logged-in user's profile, or null), and 'loading' (whether auth is still checking).
  * 
  * Usage: Wrap the <App /> with <AuthProvider>, then use useContext(AuthContext) in any child component.
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
         getInitialSession();
 
-        // Watch for login/logout events (even if they happen in another browser tab).
+        // Watch/listen for login/logout events (even if they happen in another browser tab).
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
             // Examples: 'SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED'
             console.log("Auth Event:", event);
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
         };
     }, []);
 
-    // Load the user's profile from the database.
+    // Load the user's profile data from the Supabase database table called users.
     // Gets called after login to retrieve the full user data (username, avatar, etc.).
     const fetchProfile = async (userId) => {
         try {
