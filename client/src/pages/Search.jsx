@@ -1,10 +1,5 @@
-const Search = () => {
-    return(
-    <div>
-        <h2>
-            Search
-        </h2>
-    </div>);
-}
+import { Navigate } from "react-router-dom";
 
-export default Search;
+export default function Search() {
+  return <Navigate to="/prompts?showSearch=1" replace />;
+}

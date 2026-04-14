@@ -42,7 +42,7 @@ function CTAButton({ onClick }) {
   );
 }
 
-export default function FeaturedPrompt() {
+export default function FeaturedPrompt({ showSearchBar }) {
   const navigate = useNavigate();
   const [dailyPrompt, setDailyPrompt] = useState(null);
   const [showHint, setShowHint] = useState(true);
@@ -76,17 +76,17 @@ export default function FeaturedPrompt() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-[228px] mb-10">
+    <div className="flex flex-col min-h-[228px]">
       <div className="flex justify-between">
         <h1 className="text-left text-[#FFFCEF] text-[34px] font-semibold font-poppins mb-4">
           Today's Prompt!
         </h1>
-        <SearchBar />
+        {showSearchBar && <SearchBar />}
       </div>
       <span className="text-left text-[#FBF3E5] text-[24px] font-semibold font-poppins mb-8">
         {dailyPrompt?.prompt_text}
       </span>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <HintCard visible={showHint} />
         <CTAButton onClick={handleCTAClick} />
       </div>
