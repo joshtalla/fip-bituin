@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { CiSearch } from "react-icons/ci";
-import { mockPrompt } from "../mocks/mockData";
 import { useNavigate } from "react-router-dom";
 
 function SearchBar() {
@@ -44,17 +43,9 @@ function CTAButton({ onClick }) {
   );
 }
 
-export default function FeaturedPrompt({ showSearchBar }) {
+export default function FeaturedPrompt({ showSearchBar, dailyPrompt }) {
   const navigate = useNavigate();
-  const [dailyPrompt, setDailyPrompt] = useState(null);
   const [showHint, setShowHint] = useState(true);
-
-  const fetchDailyPrompt = async () => {
-    // const resp = await fetch("api/prompts/today");
-    // const data = await resp.json();
-    // return data;
-    return mockPrompt;
-  };
 
   const handleCTAClick = () => {
     if (!dailyPrompt) return;
@@ -67,14 +58,11 @@ export default function FeaturedPrompt({ showSearchBar }) {
   };
 
   useEffect(() => {
-    fetchDailyPrompt().then((data) => {
-      setDailyPrompt(data);
-      const timer = setTimeout(() => {
-        setShowHint(false);
-      }, 5000);
+    const timer = setTimeout(() => {
+      setShowHint(false);
+    }, 5000);
 
-      return () => clearTimeout(timer);
-    });
+    return () => clearTimeout(timer);
   }, []);
 
   return (
