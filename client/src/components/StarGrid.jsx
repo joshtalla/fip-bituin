@@ -1,11 +1,12 @@
-import { FaStar } from "react-icons/fa";
 import headerStar from "../assets/header-star.svg";
 import { useState } from "react";
 import { mockPosts } from "../mocks/mockData";
 import PostPreview from "./PostPreview";
+import StarPost from "./StarPost";
 
 export default function StarGrid() {
   const [hoveredStar, setHoveredStar] = useState(null);
+  // const posts = [...mockPosts].sort((a, b) => b.likes_count - a.likes_count);
 
   return (
     <div className="flex flex-col w-full">
@@ -24,7 +25,7 @@ export default function StarGrid() {
             onMouseEnter={() => setHoveredStar(post.id)}
             onMouseLeave={() => setHoveredStar(null)}
           >
-            <FaStar className="text-[#EFB758] cursor-pointer" size={92} />
+            <StarPost post={post} />
 
             {hoveredStar === post.id && (
               <PostPreview

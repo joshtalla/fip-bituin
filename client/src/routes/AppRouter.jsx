@@ -13,6 +13,7 @@ const AppRouter = () => {
       <Route path="/" element={<Profile />} />
       <Route path="/prompts" element={<PromptBoard />} />
       <Route path="/prompts/create" element={<CreatePromptPost />} />
+      <Route path="/prompts/:postId" element={<NotFound />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/search" element={<Search />} />
       <Route path="*" element={<NotFound />} />
