@@ -104,7 +104,7 @@ export default function StarGrid({ promptId }) {
         </h1>
         <div className="flex-1 h-[2px] bg-[#FBF3E5] rounded-full" />
       </div>
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-[152px] gap-y-[100px]">
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 justify-items-center gap-2 sm:gap-3 md:gap-4 lg:gap-x-[152px] md:gap-y-[50px] lg:gap-y-[100px]">
         {posts.map((post) => (
           <div
             key={post.id}
@@ -116,6 +116,7 @@ export default function StarGrid({ promptId }) {
 
             {hoveredStar === post.id && (
               <PostPreview
+                postId={post.id}
                 title={post.anonymous_name}
                 description={post.content}
               />
