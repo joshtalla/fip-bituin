@@ -9,12 +9,12 @@ const PAGE_SIZE = 18;
 // Load more button for the star grid pagination
 function LoadMoreButton({ loadMore, isLoadingMore }) {
   return (
-    <div className="flex justify-center mt-12">
+    <div className="mt-12 flex justify-center">
       <button
         type="button"
         onClick={loadMore}
         disabled={isLoadingMore}
-        className="h-[50px] w-[220px] rounded-md bg-[#EFB758] px-4 py-2 font-darumadropone text-[16px] font-semibold text-[#4C383A] transition-all duration-300 hover:bg-[#FBF3E5] hover:text-[#4C383A] hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+        className="h-[50px] w-[220px] rounded-md bg-[#EFB758] px-4 py-2 font-darumadropone text-[16px] font-semibold text-[#4C383A] transition-all duration-300 hover:bg-[#FBF3E5] hover:text-[#4C383A] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoadingMore ? "Loading..." : "Load more"}
       </button>
@@ -106,17 +106,17 @@ export default function StarGrid({ promptId }) {
   }, [promptId]);
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex w-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-[0.75rem] mb-6">
-        <img src={headerStar} alt="" className="w-8 h-8" />
-        <h1 className="text-[#FBF3E5] text-[24px] sm:text-[30px] font-medium font-poppins">
+      <div className="mb-6 flex items-center gap-[0.75rem]">
+        <img src={headerStar} alt="" className="h-8 w-8" />
+        <h1 className="font-poppins text-[24px] font-medium text-[#FBF3E5] sm:text-[30px]">
           Top Posts for Today's Prompt
         </h1>
-        <div className="flex-1 h-[2px] bg-[#FBF3E5] rounded-full" />
+        <div className="h-[2px] flex-1 rounded-full bg-[#FBF3E5]" />
       </div>
       {/* Star grid */}
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 justify-items-center gap-24 sm:gap-3 md:gap-4 lg:gap-x-[152px] md:gap-y-[50px] lg:gap-y-[100px]">
+      <div className="grid grid-cols-3 justify-items-center gap-24 sm:gap-3 md:grid-cols-4 md:gap-4 md:gap-y-[50px] lg:grid-cols-6 lg:gap-x-[152px] lg:gap-y-[100px]">
         {posts.map((post) => (
           <div
             key={post.id}

@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 
 export default function PostPreview({ postId, title, description }) {
   return (
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-[482px] h-[277px] rounded-xl bg-[#FBF3E5] text-white p-3 shadow-xl z-10">
-      <div className="container mx-auto relative">
+    <div className="absolute bottom-full left-1/2 z-10 mb-1 h-[277px] w-[482px] -translate-x-1/2 rounded-xl bg-[#FBF3E5] p-3 text-white shadow-xl">
+      <div className="relative container mx-auto">
         <Link
           to={`/prompts/${postId}`}
           className="absolute top-0 right-0 cursor-pointer"
@@ -13,13 +13,13 @@ export default function PostPreview({ postId, title, description }) {
           <LuMaximize2 className="text-[32px] text-black" />
         </Link>
         <div className="flex items-center gap-2 pr-10">
-          <CgProfile className="text-black text-[32px]" />
-          <h2 className="font-bold text-black text-[20px] font-semibold font-poppins pt-4 mb-4">
+          <CgProfile className="text-[32px] text-black" />
+          <h2 className="mb-4 pt-4 font-poppins text-[20px] font-bold font-semibold text-black">
             {title}
           </h2>
         </div>
       </div>
-      <p className="text-sm text-[#4C383A] text-[12px] font-semibold font-poppins">
+      <p className="font-poppins text-sm text-[12px] font-semibold text-[#4C383A]">
         {description}
       </p>
     </div>

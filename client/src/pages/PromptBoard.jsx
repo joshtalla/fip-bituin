@@ -21,7 +21,7 @@ export default function PromptBoard() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full overflow-hidden pt-[144px] pb-[72px] px-[60px]">
+    <div className="min-h-screen w-full overflow-hidden px-[60px] pt-[144px] pb-[72px]">
       <FeaturedPrompt showSearchBar={showSearchBar} dailyPrompt={dailyPrompt} />
       <StarGrid promptId={dailyPrompt?.id} />
     </div>
