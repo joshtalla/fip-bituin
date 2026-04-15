@@ -1,36 +1,41 @@
 import { supabase } from "./supabaseClient";
 
-// Sign up a new user with EMAIL and PASSWORD
-export const signUp = async (email, password) => {
-    // Basic email validation using a simple regex pattern.
+export const signUp = async (email, password, username) => {
+    if (!email?.trim() || !password?.trim() || !username?.trim()) {
+        throw new Error("All fields are required");
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         throw new Error("Invalid email format");
     }
 
-    // Password must be at least 8 characters long.
-    if(password.length < 8) {
+    if (password.length < 8) {
         throw new Error("Password must be at least 8 characters long");
     }
 
     const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
+        email,
+        password,
     });
 
-    if (error) {
-        throw error
-    };
+    if (error) throw error;
 
     if (data.user) {
-        const {error: profileError} = await supabase.from('users').insert({
-            id: data.user.id,
-            username: username,
-            email: email,
-        });
+        const { data: existingUser } = await supabase
+            .from("users")
+            .select("id")
+            .eq("id", data.user.id)
+            .maybeSingle();
 
-        if (profileError) {
-            throw profileError;
+        if (!existingUser) {
+            const { error: profileError } = await supabase.from("users").insert({
+                id: data.user.id,
+                username,
+                email,
+            });
+
+            if (profileError) throw profileError;
         }
     }
 
