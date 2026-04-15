@@ -4,7 +4,7 @@ import { supabase } from '../services/supabaseClient';
 /**
  * AuthContext
  * 
- * Provides user authentication state across the entire app. Each unique page doesn't need to check if the user is logged in.
+ * Provides user authentication state across the entire app. Each page doesn't need to check if the user is logged in.
  * Any component can read: 'user' (the logged-in user's profile, or null), and 'loading' (whether auth is still checking).
  * 
  * Usage: Wrap the <App /> with <AuthProvider>, then use useContext(AuthContext) in any child component.

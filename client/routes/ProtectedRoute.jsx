@@ -6,7 +6,8 @@ const ProtectedRoute = ({ children }) => {
     // Get the logged-in user's profile and loading state from the AuthContext.
     const { user, loading } = useContext(AuthContext);
 
-    // If the user is still loading, return null which can be used
+    // If the user is still loading, return null which can be used by the parent
+    //  component to show a loading screen.
     if (loading) {
         return null;
     }

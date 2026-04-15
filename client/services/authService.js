@@ -1,15 +1,18 @@
 import { supabase } from "./supabaseClient";
 
 export const signUp = async (email, password, username) => {
+    // Ensure email, password, and username are not empty
     if (!email?.trim() || !password?.trim() || !username?.trim()) {
         throw new Error("All fields are required");
     }
 
+    // Ensure email is in a valid format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         throw new Error("Invalid email format");
     }
 
+    // Ensure password is at least 8 characters long
     if (password.length < 8) {
         throw new Error("Password must be at least 8 characters long");
     }
