@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
             if (session) {
                 // User is logged in, fetch their profile from the database.
-                await fetchProfile(session.user.id);
+                await fetchProfile(session.user.id, session.user);
             } else {
                 // No saved login. Stop loading and show the login screen.
                 setLoading(false);
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
             if (session) {
                 // User logged in, fetch their profile.
-                await fetchProfile(session.user.id);
+                await fetchProfile(session.user.id, session.user);
             } else {
                 // User logged out, clear the profile.
                 setUser(null);
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
     // Load the user's profile data from the Supabase database table called users.
     // Gets called after login to retrieve the full user data (username, avatar, etc.).
-    const fetchProfile = async (userId) => {
+    const fetchProfile = async (userId, sessionUser) => {
         try {
             // Ask the database for this user's profile.
             const { data, error } = await supabase
@@ -69,12 +69,19 @@ export const AuthProvider = ({ children }) => {
                 .eq('id', userId)
                 .single();
 
-            if (error) {
-                throw error;
-            }
+            if (error && error.code === 'PGRST116') {
+                console.warn("Error fetching profile:", error.message);
 
-            // Save the profile so the app can access it.
-            setUser(data);
+                setUser({ 
+                    id: userId, 
+                    email: sessionUser.email, 
+                    isProfileIncomplete: true });
+            } else if (error) {
+                throw error;
+            } else {
+                // Save the profile so the app can access it.
+                setUser({...data, isProfileIncomplete: false});
+            }
         } catch (error) {
             // The database query failed or the profile doesn't exist.
             console.error("Error fetching profile:", error.message);
