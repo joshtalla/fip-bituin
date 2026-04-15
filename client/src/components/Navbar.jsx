@@ -7,7 +7,7 @@ const Navbar = () => {
     pathname === "/prompts" && params.get("showSearch") === "1";
 
   return (
-    <nav className="navbar">
+    <nav className="navbar z-10">
       <div className="logo">bitluin.</div>
       <ul className="nav-links">
         <li>

@@ -108,12 +108,20 @@ export default function StarGrid({ promptId }) {
   return (
     <div className="flex w-full flex-col">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-[0.75rem]">
-        <img src={headerStar} alt="" className="h-8 w-8" />
-        <h1 className="font-poppins text-[24px] font-medium text-[#FBF3E5] sm:text-[30px]">
-          Top Posts for Today's Prompt
-        </h1>
-        <div className="h-[2px] flex-1 rounded-full bg-[#FBF3E5]" />
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex shrink-0 items-center justify-center gap-3">
+          <img src={headerStar} className="h-8 w-8 shrink-0" />
+          {/* Desktop */}
+          <h1 className="hidden font-poppins text-[24px] font-medium text-[#FBF3E5] sm:block sm:text-[30px]">
+            Top Posts for Today's Prompt
+          </h1>
+          {/* Mobile */}
+          <h1 className="block text-center font-poppins text-[20px] font-medium text-[#FBF3E5] sm:hidden sm:text-[30px]">
+            Top Posts for Today
+          </h1>
+          <img src={headerStar} className="block h-8 w-8 shrink-0 sm:hidden" />
+        </div>
+        <div className="h-[2px] w-full rounded-full bg-[#FBF3E5]" />
       </div>
       {/* Star grid */}
       <div className="grid grid-cols-3 justify-items-center gap-24 sm:gap-3 md:grid-cols-4 md:gap-4 md:gap-y-[50px] lg:grid-cols-6 lg:gap-x-[152px] lg:gap-y-[100px]">

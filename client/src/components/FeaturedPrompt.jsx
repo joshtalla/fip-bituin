@@ -2,41 +2,44 @@ import { useEffect, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 
+// Search bar that appears when the user selects to show the search bar on nav
 function SearchBar() {
   return (
-    <div className="flex items-center w-[442px] h-[42px] bg-[#FBF3E5] border border-[#D9D9D9] rounded-full px-4">
+    <div className="flex h-[42px] w-full items-center rounded-full border border-[#D9D9D9] bg-[#FBF3E5] px-4 sm:w-[442px]">
       <input
         type="text"
-        placeholder="enter a word or phrase to search!"
-        className="flex-1 outline-none text-[#765C5F] text-[16px] font-semibold font-poppins"
+        placeholder="enter a word or phrase!"
+        className="flex-1 font-poppins text-[16px] font-semibold text-[#765C5F] outline-none"
       />
-      <CiSearch className="text-[#765C5F] text-[24px]" />
+      <CiSearch className="text-[24px] text-[#765C5F]" />
     </div>
   );
 }
 
+// Card that appears and disappears to hint the user to hover over a star to view a post
 function HintCard({ visible }) {
   return (
     <div
-      className={`bg-transparent pointer-events-none border border-[#FBF3E5] rounded-md px-4 py-2 max-w-[399px] max-h-[48px] transition-opacity duration-700 ${
+      className={`pointer-events-none hidden max-h-[48px] max-w-[399px] rounded-md border border-[#FBF3E5] bg-transparent px-4 py-2 transition-opacity duration-700 sm:block ${
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
-      <h1 className="font-darumadropone text-[#FFFCEF] text-[20px]">
+      <h1 className="font-darumadropone text-[20px] text-[#FFFCEF]">
         hover over any star to view a post!
       </h1>
     </div>
   );
 }
 
+// Button that leads to the create post page
 function CTAButton({ onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="h-[50px] w-[338px] rounded-md bg-[#EFB758] px-4 py-2 font-poppins text-[16px] font-semibold text-[#765C5F] transition-all duration-300 hover:bg-[#FBF3E5] hover:text-[#EFB758] hover:shadow-md"
+      className="h-[60px] max-w-[399px] rounded-xl bg-[#EFB758] px-4 py-2 font-poppins text-[16px] font-semibold text-[#765C5F] transition-all duration-300 hover:bg-[#FBF3E5] hover:text-[#EFB758] hover:shadow-md sm:h-[50px] sm:w-[338px] sm:rounded-md"
     >
-      <span className="text-center text-[24px] text-[#4C383A] font-darumadropone">
+      <span className="text-center font-darumadropone text-[24px] text-[#4C383A]">
         ilagay ang iyong bituin
       </span>
     </button>
@@ -47,6 +50,7 @@ export default function FeaturedPrompt({ showSearchBar, dailyPrompt }) {
   const navigate = useNavigate();
   const [showHint, setShowHint] = useState(true);
 
+  // Navigate to the create post page by passing the prompt id and prompt text to the create post page
   const handleCTAClick = () => {
     if (!dailyPrompt) return;
     navigate("/prompts/create", {
@@ -57,6 +61,7 @@ export default function FeaturedPrompt({ showSearchBar, dailyPrompt }) {
     });
   };
 
+  // Hide the hint card after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowHint(false);
@@ -66,17 +71,26 @@ export default function FeaturedPrompt({ showSearchBar, dailyPrompt }) {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-[228px]">
-      <div className="flex justify-between">
-        <h1 className="text-left text-[#FFFCEF] text-[34px] font-semibold font-poppins mb-4">
-          Today's Prompt!
-        </h1>
-        {showSearchBar && <SearchBar />}
+    <div className="flex min-h-[228px] flex-col">
+      {/* Title and search bar */}
+      <div className="flex flex-col sm:flex-row sm:justify-between">
+        <div className="order-2 sm:order-1">
+          <h1 className="mb-4 text-center font-poppins text-[34px] font-semibold text-[#FFFCEF] sm:text-left">
+            Today's Prompt!
+          </h1>
+        </div>
+        {showSearchBar && (
+          <div className="order-1 mb-4 w-full sm:order-2 sm:mb-0 sm:w-auto">
+            <SearchBar />
+          </div>
+        )}
       </div>
-      <span className="text-left text-[#FBF3E5] text-[24px] font-semibold font-poppins mb-8">
+      {/* Prompt text */}
+      <span className="mb-8 text-center font-poppins text-[20px] font-semibold text-[#FBF3E5] sm:mb-12 sm:text-left sm:text-[24px]">
         {dailyPrompt?.prompt_text}
       </span>
-      <div className="flex items-center justify-between mb-4">
+      {/* Hint card and CTA button */}
+      <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:mb-4 sm:flex-row sm:justify-between sm:gap-0">
         <HintCard visible={showHint} />
         <CTAButton onClick={handleCTAClick} />
       </div>
