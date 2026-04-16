@@ -27,12 +27,14 @@ async function fetchPosts(promptId, page) {
 
   // const resp = await fetch(`/api/prompts/${promptId}/posts?page=${page}&limit=${PAGE_SIZE}`);
   // if (!resp.ok) throw new Error("Failed to fetch posts");
-  // return await resp.json();
+  // const data = await resp.json();
+  // return data;
 
   // Development only: return the mock posts
-
+  // Development only: wait 5 seconds before returning the mock posts
   const start = (page - 1) * PAGE_SIZE;
   const end = start + PAGE_SIZE;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   return mockPosts.slice(start, end);
 }
 
@@ -45,6 +47,9 @@ export default function StarGrid({ promptId }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Load more posts when the user scrolls to the bottom of the page
+  // Fetches the next page of posts from the API and adds them to the posts state by adding the new posts to the end of the existing posts
+  // If the next page of posts is empty, sets the has more state to false
+  // If the next page of posts is not empty, sets the has more state to true
   const loadMore = async () => {
     if (isLoadingMore || !hasMore) return;
 
@@ -59,47 +64,67 @@ export default function StarGrid({ promptId }) {
 
       setPosts((prev) => [...prev, ...newPosts]);
       const newPage = page + 1;
+
       setPage(newPage);
       setHasMore(newPosts.length === PAGE_SIZE);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
     } finally {
       setIsLoadingMore(false);
     }
   };
 
-  // Load the first page of posts when the component mounts
+  // Loads the first page of posts by fetching them from the API with the correct prompt id.
+  // If no prompt id, resets the posts, page, and has more state.
+  // If the first page of posts is empty, sets the has more state to false.
+  // If the second page of posts is not empty, sets the has more state to true.
   useEffect(() => {
     let cancelled = false;
 
     async function loadFirstPage() {
-      if (!promptId) {
-        setPosts([]);
+      try {
+        // Reset the loading state, the hovered star, and the has more state
+        setIsLoading(true);
+        setHasMore(false);
+        setHoveredStar(null);
+
+        // If no prompt id, reset the posts, page, and has more state
+        if (!promptId) {
+          setPosts([]);
+          setPage(1);
+          setHasMore(false);
+          return;
+        }
+
+        // Fetch the first page of posts
+        const firstPage = await fetchPosts(promptId, 1);
+        if (cancelled) return;
+
+        // Set the posts and page state so that the first page of posts is displayed
+        setPosts(firstPage);
         setPage(1);
-        setHasMore(false);
-        return;
-      }
 
-      setHasMore(false);
-      const firstPage = await fetchPosts(promptId, 1);
-      if (cancelled) return;
-      setPosts(firstPage);
-      setPage(1);
-      if (firstPage.length === 0) {
-        setHasMore(false);
-        return;
-      }
+        // If the first page of posts is empty, set the has more state to false
+        if (firstPage.length === 0) {
+          setHasMore(false);
+          return;
+        }
 
-      const nextPage = await fetchPosts(promptId, 2);
-      if (cancelled) return;
-      setHasMore(nextPage.length > 0);
+        // Fetch the second page of posts
+        const nextPage = await fetchPosts(promptId, 2);
+        if (cancelled) return;
+
+        // Set the has more state based on the length of the second page of posts
+        // so that the load more button only appears if there are more posts to load
+        setHasMore(nextPage.length > 0);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     loadFirstPage();
-
-    // Development only: set the loading flag to false after 5 seconds
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 5000);
-
     return () => {
       cancelled = true;
     };
@@ -125,25 +150,42 @@ export default function StarGrid({ promptId }) {
       </div>
       {/* Star grid */}
       <div className="grid grid-cols-3 justify-items-center gap-24 sm:gap-3 md:grid-cols-4 md:gap-4 md:gap-y-[50px] lg:grid-cols-6 lg:gap-x-[152px] lg:gap-y-[100px]">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="relative"
-            onMouseEnter={() => setHoveredStar(post.id)}
-            onMouseLeave={() => setHoveredStar(null)}
-          >
-            {isLoading ? <SkeletonStarPost /> : <StarPost post={post} />}
-
-            {!isLoading && hoveredStar === post.id && (
-              <PostPreview
-                postId={post.id}
-                title={post.anonymous_name}
-                description={post.content}
-              />
-            )}
+        {/* Loading state with skeleton posts that appear while the posts are fetched from the API */}
+        {isLoading ? (
+          Array.from({ length: PAGE_SIZE }).map((_, index) => (
+            <div key={index} className="relative">
+              <SkeletonStarPost />
+            </div>
+          ))
+        ) : // No posts message that appears if there are no posts for the current prompt
+        posts.length === 0 ? (
+          <div className="col-span-full py-12 text-center font-poppins text-[18px] text-[#FBF3E5]">
+            No posts yet for today’s prompt.
           </div>
-        ))}
+        ) : (
+          // Actual posts after loading
+          posts.map((post) => (
+            <div
+              key={post.id}
+              className="relative"
+              onMouseEnter={() => setHoveredStar(post.id)}
+              onMouseLeave={() => setHoveredStar(null)}
+            >
+              <StarPost post={post} />
+
+              {/* Post preview that only appears when the user hovers over a star */}
+              {hoveredStar === post.id && (
+                <PostPreview
+                  postId={post.id}
+                  username={post.anonymous_name}
+                  content={post.content}
+                />
+              )}
+            </div>
+          ))
+        )}
       </div>
+      {/* Load more button that only appears if there are more posts to load */}
       {hasMore && (
         <LoadMoreButton loadMore={loadMore} isLoadingMore={isLoadingMore} />
       )}

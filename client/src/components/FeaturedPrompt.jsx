@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 
+// TODO: Add search functionality to the search bar
 // Search bar that appears when the user selects to show the search bar on nav
 function SearchBar() {
   return (
@@ -46,7 +47,11 @@ function CTAButton({ onClick }) {
   );
 }
 
-export default function FeaturedPrompt({ showSearchBar, dailyPrompt }) {
+export default function FeaturedPrompt({
+  showSearchBar,
+  dailyPrompt,
+  isLoadingDailyPrompt,
+}) {
   const navigate = useNavigate();
   const [showHint, setShowHint] = useState(true);
 
@@ -87,7 +92,7 @@ export default function FeaturedPrompt({ showSearchBar, dailyPrompt }) {
       </div>
       {/* Prompt text */}
       <span className="mb-8 text-center font-poppins text-[20px] font-semibold text-[#FBF3E5] sm:mb-12 sm:text-left sm:text-[24px]">
-        {dailyPrompt?.prompt_text}
+        {isLoadingDailyPrompt ? "Loading..." : dailyPrompt?.prompt_text}
       </span>
       {/* Hint card and CTA button */}
       <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:mb-4 sm:flex-row sm:justify-between sm:gap-0">
