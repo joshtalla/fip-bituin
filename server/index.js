@@ -1,22 +1,21 @@
-// 1. Open the vault immediately so the whole app has access to your keys
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 
-// 2. Import the "Host" (your prompts router map)
 const promptRoutes = require('./routes/prompts');
+const postRoutes = require('./routes/posts');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-// 3. Updated CORS as requested in your ticket so React (port 5173) isn't blocked
-app.use(cors({ origin: "http://localhost:5173" })); 
+app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/api/posts', postRoutes);
 
-// Default Routes
+// Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the API' });
 });
@@ -25,8 +24,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 4. Plug in your prompts router
-// This tells the server: "Any request starting with /api/prompts should be handled by promptRoutes"
 app.use('/api/prompts', promptRoutes);
 
 // Start server

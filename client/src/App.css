@@ -1,3 +1,7 @@
+
+/* Poppins Font & Darumadrop One Font */
+@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -5,38 +9,52 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+body{
+  /* Color Type 1 */
+  /* background-color: #529FB0; */
+  /* Color Type 2 */
+  background: linear-gradient(to top, #682B1D, #07133B);
+  min-height: 100vh;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.navbar{
+  background-image: linear-gradient(to top, transparent, rgba(0,0,0,0.5));
+  display: flex;
+  position: fixed;
+  top: 0rem;
+  left: 0rem;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.logo{
+  font-family: 'Darumadrop One', sans-serif;
+  font-size: 3rem;
+  color: #EFB758;
 }
 
-.card {
-  padding: 2em;
+.nav-links{
+  display: flex;
+  font-size: 1.2rem;
+  list-style: none;
+  gap: 20px;
 }
 
-.read-the-docs {
-  color: #888;
+.nav-links a{
+  font-family: 'Poppins', sans-serif;
+  color:white;
+  text-decoration: none;
 }
+
+.nav-links a.active{
+  color: #ffff;
+  border-bottom: 2px solid #ffff;
+}
+
+.nav-links a:hover{
+  color: #ccc;
+}
+
