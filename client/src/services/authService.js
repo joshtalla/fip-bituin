@@ -1,8 +1,27 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 
-const supaURL = process.env.VITE_SUPABASE_URL;
-const supaAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+export const signUp = async (email, password) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
 
-export const supabase = createClient(supaURL, supaAnonKey);
+  if (error) {
+    throw error;
+  }
 
+  return data;
+};
 
+export const signIn = async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};

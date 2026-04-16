@@ -1,28 +1,24 @@
-
-/* Poppins Font & Darumadrop One Font */
-@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
-
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-body{
-  /* Color Type 1 */
-  /* background-color: #529FB0; */
-  /* Color Type 2 */
-  background: linear-gradient(to top, #682B1D, #07133B);
   min-height: 100vh;
 }
 
-.navbar{
-  background-image: linear-gradient(to top, transparent, rgba(0,0,0,0.5));
+body {
+  min-height: 100vh;
+  background: linear-gradient(to top, #682b1d, #07133b);
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.navbar {
+  background-image: linear-gradient(to top, transparent, rgba(0, 0, 0, 0.5));
   display: flex;
   position: fixed;
-  top: 0rem;
-  left: 0rem;
+  top: 0;
+  left: 0;
   width: 100%;
   box-sizing: border-box;
   justify-content: space-between;
@@ -30,31 +26,30 @@ body{
   padding: 1rem 2rem;
 }
 
-.logo{
+.logo {
   font-family: 'Darumadrop One', sans-serif;
   font-size: 3rem;
-  color: #EFB758;
+  color: #efb758;
 }
 
-.nav-links{
+.nav-links {
   display: flex;
   font-size: 1.2rem;
   list-style: none;
   gap: 20px;
 }
 
-.nav-links a{
+.nav-links a {
   font-family: 'Poppins', sans-serif;
-  color:white;
+  color: white;
   text-decoration: none;
 }
 
-.nav-links a.active{
-  color: #ffff;
-  border-bottom: 2px solid #ffff;
+.nav-links a.active {
+  color: #fff;
+  border-bottom: 2px solid #fff;
 }
 
-.nav-links a:hover{
+.nav-links a:hover {
   color: #ccc;
 }
-
