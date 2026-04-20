@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../services/supabaseClient'
 
 function CreatePostForm({ promptId, promptText }) {
   const navigate = useNavigate()
@@ -13,9 +14,18 @@ function CreatePostForm({ promptId, promptText }) {
     setLoading(true)
     setError(null)
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) throw new Error('Not authenticated')
+
       const response = await fetch(`${apiBaseUrl}/api/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           prompt_id: promptId,
           content: content,

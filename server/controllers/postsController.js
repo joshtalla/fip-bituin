@@ -6,6 +6,10 @@ const createPost = async (req, res) => {
     const { prompt_id, content } = req.body;
 
     
+    if (!prompt_id) {
+      return res.status(400).json({ error: "Prompt ID required" });
+    }
+
     if (!content) {
       return res.status(400).json({ error: "Content required" });
     }
