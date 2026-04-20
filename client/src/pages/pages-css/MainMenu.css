@@ -1,0 +1,90 @@
+/* Poppins Font & Darumadrop One Font */
+@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
+
+.container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.container-row-split{
+    display: flex;
+    flex-direction: row;
+    gap: 14em;
+}
+
+.row-split-left{
+    text-align: left;
+    margin:0;
+    white-space: nowrap;
+}
+
+.item-split{
+    flex: 1;
+}
+
+.sign-up-text{
+    list-style: none;
+    line-height: 1.2em;
+}
+
+.sign-up-text a{
+    color: #EFB758;
+    font-style: italic;
+}
+
+.sign-up-text a:hover{
+    border-bottom: 2px solid;
+}
+
+button{
+    border-color: #4C383A;
+}
+
+.log-in-button{
+    font-family: 'Darumadrop One', sans-serif;
+    color: #4C383A;
+    background-color: #EFB758;
+    font-size: 30px;
+    padding: 3px 9px;
+    width: 3.2em;
+    height: 50%;
+}
+
+.menu-top-text{
+    text-align: left;
+    margin: 0;
+}
+
+img{
+    max-width: 10%;
+    height: auto;
+    vertical-align: middle;
+}
+
+p{
+    font-family: 'Poppins', sans-serif;
+}
+
+.logo-menu{
+  font-family: 'Darumadrop One', sans-serif;
+  font-size: 6rem;
+  color: #EFB758;
+  margin-top: 1px;
+  line-height: 1;
+  margin-top: -30px;
+  padding-top: 0;
+}
+
+.password-box, .email-box{
+    font-family: 'Poppins', sans-serif;
+    background-color: #FBF3E5;
+    color: #765C5F;
+    width: 28em;
+    align-items: flex-start;
+    border-radius: 5px;
+    border-style: none;
+    padding: 12px;
+    padding-left: 10px;
+}
