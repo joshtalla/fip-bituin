@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Login';
 import Signup from '../pages/Signup';
-import Prompts from '../pages/Prompts';
+import PromptBoard from '../pages/PromptBoard';
 import Profile from '../pages/Profile';
 import Explore from '../pages/Explore';
 import Search from '../pages/Search';
@@ -15,11 +15,12 @@ const AppRouter = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/sign-up" element={<Navigate to="/signup" replace />} />
-      <Route path="/prompts" element={<Prompts />} />
+      <Route path="/prompts" element={<PromptBoard />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/search" element={<Search />} />
       <Route path="/prompts/create" element={<CreatePost />} />
+      <Route path="/prompts/:postId" element={<NotFound />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

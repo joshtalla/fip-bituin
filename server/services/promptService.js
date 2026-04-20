@@ -1,15 +1,4 @@
-// Load hidden environment variables from the .env file
-require('dotenv').config();
-
-// Import the tool needed to connect to Supabase
-const { createClient } = require('@supabase/supabase-js');
-
-// Retrieve your specific database URL and secret key from the .env vault
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-// Initialize the Supabase client (this opens the actual connection to the database)
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = require('../supabaseClient');
 
 /**
  * Fetches today's active prompt.
@@ -157,4 +146,3 @@ module.exports = {
   getArchivePrompts,
   createPrompt   
 };
-

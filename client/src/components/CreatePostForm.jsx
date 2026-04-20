@@ -1,20 +1,31 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../services/supabaseClient'
 
 function CreatePostForm({ promptId, promptText }) {
   const navigate = useNavigate()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
   const MAX = 1000
 
   const handlePublish = async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('http://localhost:3000/api/posts', {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+      if (!accessToken) throw new Error('Not authenticated')
+
+      const response = await fetch(`${apiBaseUrl}/api/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           prompt_id: promptId,
           content: content,
@@ -23,7 +34,7 @@ function CreatePostForm({ promptId, promptText }) {
       if (!response.ok) throw new Error('Failed to publish')
       const data = await response.json()
       navigate(`/prompts/${data.id}`)
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
