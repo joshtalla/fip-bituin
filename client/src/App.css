@@ -1,41 +1,58 @@
 #root {
   width: 100%;
+  min-height: 100vh;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(to top, #682b1d, #07133b);
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.navbar {
+  background-image: linear-gradient(to top, transparent, rgba(0, 0, 0, 0.5));
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  font-family: 'Darumadrop One', sans-serif;
+  font-size: 3rem;
+  color: #efb758;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.nav-links {
+  display: flex;
+  font-size: 1.2rem;
+  list-style: none;
+  gap: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.nav-links a {
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  text-decoration: none;
 }
 
-.card {
-  padding: 2em;
+.nav-links a.active {
+  color: #fff;
+  border-bottom: 2px solid #fff;
 }
 
-.read-the-docs {
-  color: #888;
+.nav-links a:hover {
+  color: #ccc;
 }
 
 textarea::placeholder {
