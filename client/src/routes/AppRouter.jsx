@@ -1,21 +1,26 @@
-// In the case of adding more pages: import *page-name* from ../pages/*page-name*
-import { Routes, Route } from "react-router-dom";
-import PromptBoard from "../pages/PromptBoard";
-import Profile from "../pages/Profile";
-import CreatePromptPost from "../pages/CreatePromptPost";
-import Explore from "../pages/Explore";
-import Search from "../pages/Search";
-import NotFound from "../pages/NotFound";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Login from '../pages/Login';
+import Signup from '../pages/Signup';
+import PromptBoard from '../pages/PromptBoard';
+import Profile from '../pages/Profile';
+import Explore from '../pages/Explore';
+import Search from '../pages/Search';
+import CreatePost from '../pages/CreatePost';
+import NotFound from '../pages/NotFound';
 
 const AppRouter = () => {
   return (
     <Routes>
-      <Route path="/" element={<Profile />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/sign-up" element={<Navigate to="/signup" replace />} />
       <Route path="/prompts" element={<PromptBoard />} />
-      <Route path="/prompts/create" element={<CreatePromptPost />} />
-      <Route path="/prompts/:postId" element={<NotFound />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/search" element={<Search />} />
+      <Route path="/prompts/create" element={<CreatePost />} />
+      <Route path="/prompts/:postId" element={<NotFound />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

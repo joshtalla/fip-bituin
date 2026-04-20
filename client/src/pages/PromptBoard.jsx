@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import FeaturedPrompt from "../components/FeaturedPrompt";
+import Navbar from "../components/Navbar";
 import StarGrid from "../components/StarGrid";
 import { mockPrompt } from "../mocks/mockData";
 
@@ -41,6 +42,7 @@ export default function PromptBoard() {
 
   return (
     <div className="min-h-screen w-full overflow-hidden px-[60px] pt-[144px] pb-[72px]">
+      <Navbar />
       {/* Featured prompt section that appears at the top of the page */}
       <FeaturedPrompt
         showSearchBar={showSearchBar}

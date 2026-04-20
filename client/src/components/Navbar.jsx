@@ -11,7 +11,7 @@ const Navbar = () => {
       <div className="logo">bitluin.</div>
       <ul className="nav-links">
         <li>
-          <NavLink to="/" end>
+          <NavLink to="/profile" end>
             profile
           </NavLink>
         </li>
