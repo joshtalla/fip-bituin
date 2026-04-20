@@ -16,7 +16,10 @@ const createPost = async (req, res) => {
       return res.status(401).json({ error: "No auth token" });
     }
 
-    const token = authHeader.split(" ")[1];
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme !== "Bearer" || !token) {
+      return res.status(401).json({ error: "Invalid authorization format" });
+    }
 
     
     const { data, error } = await supabase.auth.getUser(token);

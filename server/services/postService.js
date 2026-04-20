@@ -10,11 +10,14 @@ const containsLikelyEmail = (text = '') =>
 const insertPost = async ({ prompt_id, content, auth_user_id }) => {
 
   // get user profile
-  const { data: user } = await supabase
+  const { data: user, error: userError } = await supabase
     .from('users')
     .select('anonymous_name')
     .eq('id', auth_user_id)
     .single();
+  if (userError || !user?.anonymous_name) {
+    throw new Error('User profile not found');
+  }
 
   const containsEmail = containsLikelyEmail(content);
 
