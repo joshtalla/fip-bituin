@@ -1,4 +1,5 @@
 const { insertPost } = require('../services/postService');
+const supabase = require('../supabaseClient');
 
 const createPost = async (req, res) => {
   try {

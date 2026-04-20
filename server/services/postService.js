@@ -1,4 +1,11 @@
-const { supabase } = require('../supabaseClient');
+const supabase = require('../supabaseClient');
+
+const containsLikelyEmail = (text = '') =>
+  text.split(/\s+/).some((token) => {
+    const at = token.indexOf('@');
+    const dot = token.lastIndexOf('.');
+    return at > 0 && dot > at + 1 && dot < token.length - 1;
+  });
 
 const insertPost = async ({ prompt_id, content, auth_user_id }) => {
 
@@ -9,7 +16,7 @@ const insertPost = async ({ prompt_id, content, auth_user_id }) => {
     .eq('id', auth_user_id)
     .single();
 
-  const containsEmail = /\S+@\S+\.\S+/.test(content);
+  const containsEmail = containsLikelyEmail(content);
 
   const { data, error } = await supabase
     .from('posts')

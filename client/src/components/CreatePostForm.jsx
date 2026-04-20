@@ -6,13 +6,14 @@ function CreatePostForm({ promptId, promptText }) {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
   const MAX = 1000
 
   const handlePublish = async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('http://localhost:3000/api/posts', {
+      const response = await fetch(`${apiBaseUrl}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -23,7 +24,7 @@ function CreatePostForm({ promptId, promptText }) {
       if (!response.ok) throw new Error('Failed to publish')
       const data = await response.json()
       navigate(`/prompts/${data.id}`)
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
