@@ -5,6 +5,7 @@ import Prompts from '../pages/Prompts';
 import Profile from '../pages/Profile';
 import Explore from '../pages/Explore';
 import Search from '../pages/Search';
+import CreatePost from '../pages/CreatePost';
 import NotFound from '../pages/NotFound';
 
 const AppRouter = () => {
@@ -18,6 +19,7 @@ const AppRouter = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/search" element={<Search />} />
+      <Route path="/prompts/create" element={<CreatePost />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
