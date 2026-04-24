@@ -1,5 +1,5 @@
 // 1. Import the "Chef" (our service file) so the waiter can talk to it
-const promptService = require('../services/promptService');
+const promptService = require("../services/promptService");
 
 /**
  * Waiter function to handle requests for today's prompt.
@@ -11,12 +11,11 @@ const getTodayPrompt = async (req, res) => {
     if (prompt) {
       res.status(200).json(prompt);
     } else {
-      res.status(404).json({ error: 'No prompts found in the database.' });
+      res.status(404).json({ error: "No prompts found in the database." });
     }
-
   } catch (error) {
     console.error("Error in getTodayPrompt controller:", error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -28,18 +27,18 @@ const getPromptById = async (req, res) => {
     // req.params pulls the dynamic ID directly out of the URL string
     // Example: If the URL is /api/prompts/123, then req.params.id will be "123"
     const { id } = req.params;
-    
+
     // Ask the Chef to find the prompt with this specific ID
     const prompt = await promptService.getPromptById(id);
 
     if (prompt) {
       res.status(200).json(prompt);
     } else {
-      res.status(404).json({ error: 'Prompt not found.' });
+      res.status(404).json({ error: "Prompt not found." });
     }
   } catch (error) {
     console.error("Error in getPromptById controller:", error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -51,18 +50,18 @@ const getPromptByDate = async (req, res) => {
     // req.params pulls the dynamic date directly out of the URL string
     // Example: /api/prompts/date/2026-03-30 -> req.params.date will be "2026-03-30"
     const { date } = req.params;
-    
+
     // Ask the Chef to find the prompt with this specific date
     const prompt = await promptService.getPromptByDate(date);
 
     if (prompt) {
       res.status(200).json(prompt);
     } else {
-      res.status(404).json({ error: 'Prompt not found for this date.' });
+      res.status(404).json({ error: "Prompt not found for this date." });
     }
   } catch (error) {
     console.error("Error in getPromptByDate controller:", error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -73,19 +72,36 @@ const getArchivePrompts = async (req, res) => {
   try {
     // req.query pulls variables from the end of the URL (after the '?')
     // We also set default values (page 1, limit 10) just in case the frontend forgets to send them
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    
+    const rawPage = req.query.page ?? 1;
+    const rawLimit = req.query.limit ?? 10;
+
+    // Standardize the page and limit values to numbers, and clamp the limit to 50 to prevent abuse
+    const page = Number(rawPage);
+    const limit = Math.min(Number(rawLimit), 50);
+
+    // If the page is not a positive number, return a 400 error
+    if (!Number.isInteger(page) || page <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Invalid page value (non-numeric, zero, or negative)" });
+    }
+
+    // If the limit is not a positive number, return a 400 error
+    if (!Number.isInteger(limit) || limit <= 0) {
+      return res.status(400).json({
+        error: "Invalid limit value (non-numeric, zero, or negative)",
+      });
+    }
+
     // Ask the Chef to get the specific page of prompts
     const prompts = await promptService.getArchivePrompts(page, limit);
 
     // For arrays (lists of data), an empty result is just [], not null/undefined
     // So we can just return it directly with a 200 status
     res.status(200).json(prompts);
-
   } catch (error) {
     console.error("Error in getArchivePrompts controller:", error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -102,10 +118,9 @@ const createPrompt = async (req, res) => {
 
     // 201 is the specific HTTP status code for "Created successfully"
     res.status(201).json(newPrompt);
-
   } catch (error) {
     console.error("Error in createPrompt controller:", error.message);
-    
+
     // If the error was our custom validation error (missing fields or duplicate date),
     // we send a 400 Bad Request to tell the frontend they messed up the form.
     res.status(400).json({ error: error.message });
@@ -118,5 +133,5 @@ module.exports = {
   getPromptById,
   getPromptByDate,
   getArchivePrompts,
-  createPrompt
+  createPrompt,
 };
