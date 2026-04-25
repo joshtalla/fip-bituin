@@ -27,6 +27,9 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/prompts', promptRoutes);
 
+const replyRoutes = require('./routes/replies');
+app.use('/api', replyRoutes);
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
