@@ -145,6 +145,86 @@ const getArchivePrompts = async (page = 1, limit = 10) => {
   };
 };
 
+const getPromptBoard = async (id, { sort, page, limit }) => {
+  // Get today's date formatted as YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0];
+
+  // Fetches a specific prompt by its ID.
+  const { data, error } = await supabase
+    .from("prompts")
+    .select("id, title, prompt_text, category, prompt_date, is_active")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  // If the prompt is not found, throw an error
+  if (!data) {
+    throw new Error("Prompt not found.");
+  }
+
+  // If the prompt is inactive, throw an error
+  if (data.is_active === false) {
+    throw new Error("Prompt is inactive (is_active = FALSE).");
+  }
+
+  // If the prompt is today's or a future date, throw an error
+  if (data.prompt_date >= today) {
+    throw new Error("Prompt is today's or a future date - not in the archive.");
+  }
+
+  // Set the sort column based on the sort parameter
+  const sortBy = {
+    newest: "created_at",
+    likes: "likes_count",
+    popular: "reply_count",
+  };
+
+  const sortColumn = sortBy[sort] || sortBy.newest;
+
+  // Calculate the database range based on the page and limit
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  // Fetches the posts for the specific prompt.
+  // Count the number of posts for the specific prompt.
+  // Sort by the column.
+  // Apply the pagination math.
+  const {
+    data: posts,
+    error: postsError,
+    count,
+  } = await supabase
+    .from("posts")
+    .select(
+      "id, prompt_id, anonymous_name, content, category, language, country, likes_count, reply_count, created_at", // Select the columns we want to return
+      {
+        count: "exact", // Count the number of posts for the specific prompt (exact count)
+      },
+    )
+    .eq("prompt_id", id) // Only get posts for the specific prompt
+    .order(sortColumn, { ascending: false }) // Sort by the column in descending order (newest to oldest)
+    .range(from, to); // Apply the pagination math (from the start of the page to the end of the page)
+
+  if (postsError) {
+    throw new Error(postsError.message);
+  }
+
+  // Remove the is_active column from the prompt data and return the prompt data without the is_active column
+  const { is_active, ...safePrompt } = data;
+
+  return {
+    prompt: safePrompt,
+    posts: {
+      items: posts || [],
+      total: count || 0,
+      page,
+      limit,
+    },
+  };
+};
+
 /**
  * Creates a new prompt.
  * Ticket requirements: validate required fields, prevent duplicate prompt dates.
@@ -192,5 +272,6 @@ module.exports = {
   getPromptById,
   getPromptByDate,
   getArchivePrompts,
+  getPromptBoard,
   createPrompt,
 };

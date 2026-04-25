@@ -106,6 +106,68 @@ const getArchivePrompts = async (req, res) => {
 };
 
 /**
+ * Waiter function to handle requests for a specific prompt board by its ID.
+ */
+const getPromptBoard = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rawSort = req.query.sort ?? "newest";
+    const rawPage = req.query.page ?? 1;
+    const rawLimit = req.query.limit ?? 10;
+
+    let sort = String(rawSort);
+    const page = Number(rawPage);
+    const limit = Math.min(Number(rawLimit), 50);
+
+    // If the sort is not one of the allowed values, fall back to "newest"
+    if (!["newest", "likes", "popular"].includes(sort)) {
+      sort = "newest";
+    }
+
+    // If the page is not a positive number, return a 400 error
+    if (!Number.isInteger(page) || page <= 0) {
+      return res
+        .status(400)
+        .json({ error: "Invalid page value (non-numeric, zero, or negative)" });
+    }
+
+    // If the limit is not a positive number, return a 400 error
+    if (!Number.isInteger(limit) || limit <= 0) {
+      return res.status(400).json({
+        error: "Invalid limit value (non-numeric, zero, or negative)",
+      });
+    }
+
+    // Ask the Chef to get the specific prompt board
+    const promptBoard = await promptService.getPromptBoard(id, {
+      sort,
+      page,
+      limit,
+    });
+
+    // For arrays (lists of data), an empty result is just [], not null/undefined
+    // So we can just return it directly with a 200 status
+    res.status(200).json(promptBoard);
+  } catch (error) {
+    console.error("Error in getPromptBoard controller:", error.message);
+
+    // If the error was our custom validation error (Prompt not found, Prompt is inactive, Prompt is today's or a future date),
+    // we send a 404 Bad Request to tell the frontend they messed up the form.
+    if (
+      error.message === "Prompt not found." ||
+      error.message === "Prompt is inactive (is_active = FALSE)." ||
+      error.message ===
+        "Prompt is today's or a future date - not in the archive."
+    ) {
+      return res.status(404).json({ error: error.message });
+    }
+    // If the error was not our custom validation error, we send a 500 Internal Server Error
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+/**
  * Waiter function to handle creating a new prompt (POST request).
  */
 const createPrompt = async (req, res) => {
@@ -133,5 +195,6 @@ module.exports = {
   getPromptById,
   getPromptByDate,
   getArchivePrompts,
+  getPromptBoard,
   createPrompt,
 };
