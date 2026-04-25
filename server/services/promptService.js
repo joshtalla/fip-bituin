@@ -154,11 +154,12 @@ const getPromptBoard = async (id, { sort, page, limit }) => {
     .from("prompts")
     .select("id, title, prompt_text, category, prompt_date, is_active")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
+
   // If the prompt is not found, throw an error
   if (!data) {
     throw new Error("Prompt not found.");
