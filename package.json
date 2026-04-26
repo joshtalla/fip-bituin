@@ -24,5 +24,11 @@
   "homepage": "https://github.com/joshtalla/fip-bituin#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "react-hook-form": "^7.72.1",
+    "react-router-dom": "^7.14.0",
+    "yup": "^1.7.1"
   }
 }

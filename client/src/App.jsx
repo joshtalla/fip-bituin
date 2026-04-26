@@ -1,14 +1,16 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import CreatePost from './pages/CreatePost'
+import AppRouter from './routes/AppRouter';
+import Stars from './components/Stars';
+import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/prompts/create" element={<CreatePost />} />
-      </Routes>
-    </BrowserRouter>
-  )
+    <>
+      <Stars count={10000} />
+      <div className="app-shell">
+        <AppRouter />
+      </div>
+    </>
+  );
 }
 
-export default App
+export default App;
