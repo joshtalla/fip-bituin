@@ -1,6 +1,14 @@
 const supabase = require('../supabaseClient');
 
 /**
+ * Service for handling replies related operations, such as creating replies and fetching replies for a post.
+ */
+exports.createTopLevelReply = async (postId, user, content) => {
+  // Placeholder for now
+  return null;
+};
+
+/**
  * Service for fetching all replies for a post. 
  * Supports pagination via page and limit parameters(20 messages per page). 
  * 

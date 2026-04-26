@@ -19,9 +19,7 @@ router.get('/test', (req, res) => {
  * 
  * Example: POST http://localhost:3000/api/posts/123/replies
  */
-router.post('/posts/:postId/replies', (req, res) => {
-    res.status(501).json({ message: 'Not implemented(POST): create top-level reply' });
-});
+router.post('/posts/:postId/replies', repliesController.createTopLevelReply);
 
 /**
  * POST /api/replies/:replyId/replies

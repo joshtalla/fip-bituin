@@ -6,6 +6,18 @@ function isValidUUID(uuid) {
 }
 
 /**
+ * POST /api/posts/:postId/replies
+ * 
+ * 
+ * Controller for creating a top-level reply to a post.
+ */
+exports.createTopLevelReply = async (req, res) => {
+  res.status(501).json({ message: 'Not implemented: create top-level reply' });
+};
+
+/**
+ * GET /api/posts/:postId/replies
+ * 
  * Controller for fetching all replies for a post.
  * Responds with a placeholder message for now.
  */
