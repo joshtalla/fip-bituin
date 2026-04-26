@@ -53,13 +53,12 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
     }
   };
 
-  // Exact thick 'X' from Figma, explicitly positioned
   const CloseButton = () => (
     <button
       onClick={handleClose}
       disabled={isSubmitting}
       className="absolute hover:opacity-70 disabled:opacity-50"
-      style={{ top: '16px', left: '16px', zIndex: 10 }}
+      style={{ top: '20px', left: '20px', zIndex: 10 }}
       aria-label="Close"
     >
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">
@@ -69,53 +68,42 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
     </button>
   );
 
-  // Exact outlined sparkles from Figma
-  const Sparkles = () => (
-    <svg className="absolute text-[#EFB758]" style={{ bottom: '16px', right: '20px', width: '50px', height: '50px' }} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M30 15 Q 35 35 55 40 Q 35 45 30 65 Q 25 45 5 40 Q 25 35 30 15 Z" fill="#FFFCEF" />
-      <path d="M75 45 Q 77 55 87 57 Q 77 59 75 69 Q 73 59 63 57 Q 73 55 75 45 Z" fill="#FFFCEF" />
-    </svg>
-  );
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      {/* Box is now BIGGER so things aren't squished! */}
+      {/* Container uses pure padding to naturally size the box */}
       <div 
-        className="relative rounded-[8px] bg-[#FFFCEF] shadow-xl transition-all duration-200 overflow-hidden"
-        style={{ 
-          width: '460px', 
-          height: view === 'form' ? '360px' : '180px' 
-        }}
+        className="relative rounded-[8px] bg-[#FFFCEF] shadow-xl transition-all duration-200 flex flex-col"
+        style={{ width: '480px', padding: '48px 40px 40px 40px' }}
       >
         <CloseButton />
 
-        {/* STEP 1: YES/NO CONFIRMATION */}
+        {/* STEP 1: CONFIRMATION */}
         {view === 'confirm' && (
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            {/* Title finally has room for a big bottom margin */}
+          <div className="w-full flex flex-col items-center justify-center">
             <h2 
               className="text-[#4C383A]"
               style={{ 
                 fontFamily: "'Darumadrop One', cursive", 
                 fontSize: '40px', 
                 lineHeight: '1',
-                marginBottom: '28px'
+                marginTop: '10px',
+                marginBottom: '36px'
               }}
             >
               report {contentType}?
             </h2>
-            <div className="flex gap-8">
+            <div className="flex justify-center" style={{ gap: '32px' }}>
               <button
                 onClick={() => setView('form')}
                 className="bg-[#8A8DAA] text-[#4C383A] rounded-[8px] flex items-center justify-center shadow-md hover:opacity-80 transition-all hover:-translate-y-[1px]"
-                style={{ width: '85px', height: '40px', fontFamily: "'Darumadrop One', cursive", fontSize: '22px' }}
+                style={{ width: '90px', height: '44px', fontFamily: "'Darumadrop One', cursive", fontSize: '24px' }}
               >
                 yes
               </button>
               <button
                 onClick={handleClose}
                 className="bg-[#EFB758] text-[#4C383A] rounded-[8px] flex items-center justify-center shadow-md hover:opacity-80 transition-all hover:-translate-y-[1px]"
-                style={{ width: '85px', height: '40px', fontFamily: "'Darumadrop One', cursive", fontSize: '22px' }}
+                style={{ width: '90px', height: '44px', fontFamily: "'Darumadrop One', cursive", fontSize: '24px' }}
               >
                 no
               </button>
@@ -123,61 +111,64 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
           </div>
         )}
 
-        {/* STEP 2: REASONS FORM */}
+        {/* STEP 2: FORM */}
         {view === 'form' && (
-          <form onSubmit={handleSubmit} className="w-full h-full flex flex-col px-8 pt-6 pb-4">
+          <form onSubmit={handleSubmit} className="w-full flex flex-col">
             <h2 
-              className="text-center text-[#4C383A] mb-4"
-              style={{ fontFamily: "'Darumadrop One', cursive", fontSize: '28px', lineHeight: '1' }}
+              className="text-center text-[#4C383A]"
+              style={{ 
+                fontFamily: "'Darumadrop One', cursive", 
+                fontSize: '36px', 
+                lineHeight: '1',
+                marginTop: '10px', 
+                marginBottom: '32px' 
+              }}
             >
               reasons
             </h2>
 
-            {/* Radio Group */}
-            <div className="flex flex-col gap-3 mb-3">
+            <div className="flex flex-col" style={{ gap: '16px', marginBottom: '32px' }}>
               {REPORT_REASONS.map((option) => (
-                <label key={option.value} className="flex items-center gap-3 cursor-pointer text-[#4C383A]" style={{ fontFamily: "'Darumadrop One', cursive", fontSize: '16px' }}>
+                <label key={option.value} className="flex items-center cursor-pointer text-[#4C383A]" style={{ gap: '12px', fontFamily: "'Darumadrop One', cursive", fontSize: '20px', lineHeight: '1' }}>
                   <input
                     type="radio"
                     name="report_reason"
                     value={option.value}
                     checked={reason === option.value}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-4 h-4 accent-[#EFB758]"
+                    className="w-5 h-5 accent-[#EFB758] shrink-0"
                   />
-                  {option.label}
+                  <span>{option.label}</span>
                 </label>
               ))}
             </div>
 
-            {/* Description Area */}
-            <div className="flex flex-col mb-3 relative">
+            <div className="relative flex flex-col" style={{ marginBottom: '40px' }}>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="optional description..."
                 maxLength={MAX_CHARS}
-                className="w-full bg-[#EDE8D8] rounded-[8px] p-2 text-[#4C383A] outline-none focus:ring-2 focus:ring-[#EFB758] resize-none"
-                style={{ height: '60px', fontFamily: "'Poppins', sans-serif", fontSize: '13px' }}
+                className="w-full bg-[#EDE8D8] rounded-[8px] p-3 text-[#4C383A] outline-none focus:ring-2 focus:ring-[#EFB758] resize-none"
+                style={{ height: '70px', fontFamily: "'Poppins', sans-serif", fontSize: '14px' }}
               />
-              <span className="absolute bottom-1 right-2 text-[#888]" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '10px' }}>
+              <span className="absolute text-[#888]" style={{ bottom: '8px', right: '12px', fontFamily: "'Poppins', sans-serif", fontSize: '11px' }}>
                 {description.length} / {MAX_CHARS}
               </span>
             </div>
 
-            {/* Error & Buttons */}
-            <div className="mt-auto flex flex-col items-center">
+            <div className="flex flex-col items-center">
               {error && (
-                <div className="mb-2 text-red-500 font-semibold" style={{ fontFamily: "'Poppins', sans-serif", fontSize: '12px' }}>
+                <div className="text-red-500 font-semibold" style={{ marginBottom: '12px', fontFamily: "'Poppins', sans-serif", fontSize: '12px' }}>
                   {error}
                 </div>
               )}
-              <div className="flex gap-4">
+              <div className="flex justify-center" style={{ gap: '32px' }}>
                 <button
                   type="submit"
                   disabled={!reason || isSubmitting}
-                  className="bg-[#8A8DAA] text-[#4C383A] rounded-[8px] flex items-center justify-center shadow-md hover:opacity-80 disabled:opacity-50 disabled:shadow-none"
-                  style={{ width: '90px', height: '38px', fontFamily: "'Darumadrop One', cursive", fontSize: '20px' }}
+                  className="bg-[#8A8DAA] text-[#4C383A] rounded-[8px] flex items-center justify-center shadow-md hover:opacity-80 transition-all hover:-translate-y-[1px] disabled:opacity-50 disabled:hover:-translate-y-0 disabled:cursor-not-allowed"
+                  style={{ width: '100px', height: '44px', fontFamily: "'Darumadrop One', cursive", fontSize: '22px' }}
                 >
                   {isSubmitting ? '...' : 'submit'}
                 </button>
@@ -185,8 +176,8 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
                   type="button"
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  className="bg-[#EFB758] text-[#4C383A] rounded-[8px] flex items-center justify-center shadow-md hover:opacity-80 disabled:opacity-50 disabled:shadow-none"
-                  style={{ width: '90px', height: '38px', fontFamily: "'Darumadrop One', cursive", fontSize: '20px' }}
+                  className="bg-[#EFB758] text-[#4C383A] rounded-[8px] flex items-center justify-center shadow-md hover:opacity-80 transition-all hover:-translate-y-[1px] disabled:opacity-50 disabled:hover:-translate-y-0"
+                  style={{ width: '100px', height: '44px', fontFamily: "'Darumadrop One', cursive", fontSize: '22px' }}
                 >
                   cancel
                 </button>
@@ -195,17 +186,33 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
           </form>
         )}
 
-        {/* STEP 3: SUCCESS STATE */}
+        {/* STEP 3: SUCCESS */}
         {view === 'success' && (
-          <div className="w-full h-full flex items-center justify-center relative">
+          <div className="w-full flex items-center justify-center">
             <h2 
               className="text-[#4C383A]"
-              style={{ fontFamily: "'Darumadrop One', cursive", fontSize: '36px' }}
+              style={{ 
+                fontFamily: "'Darumadrop One', cursive", 
+                fontSize: '44px', // Bumped size to match Figma
+                lineHeight: '1',
+                marginTop: '10px' // Aligns perfectly with the X
+              }}
             >
               report submitted!
             </h2>
-            <Sparkles />
           </div>
+        )}
+
+        {/* Sparkles rendered AT THE ROOT of the modal, so they pin perfectly to the bottom-right corner */}
+        {view === 'success' && (
+          <svg className="absolute text-[#EFB758]" style={{ bottom: '16px', right: '16px', width: '70px', height: '70px' }} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            {/* Small Bottom-Left Star */}
+            <path d="M 20 80 Q 30 80 30 70 Q 30 80 40 80 Q 30 80 30 90 Q 30 80 20 80 Z" fill="#FFFCEF" />
+            {/* Large Top-Right Star */}
+            <path d="M 50 40 Q 70 40 70 20 Q 70 40 90 40 Q 70 40 70 60 Q 70 40 50 40 Z" fill="#FFFCEF" />
+            {/* Connecting curve */}
+            <path d="M 37 73 Q 50 60 63 47" />
+          </svg>
         )}
 
       </div>
