@@ -14,9 +14,19 @@ exports.getRepliesForPost = async (req, res) => {
     if (!isValidUUID(postId)) {
         return res.status(400).json({ message: 'Invalid postId format (must be UUID)' });
     }
+
+    // Parse pagination params with defaults
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+
     try {
-        const replies = await replyService.getRepliesForPost(postId);
-        res.status(200).json({ replies });
+        const { replies, total } = await replyService.getRepliesForPost(postId, page, limit);
+        res.status(200).json({
+            replies,
+            total,
+            page,
+            limit
+        });
     } catch (err) {
         console.error('Error fetching replies:', err);
         res.status(500).json({ message: 'Error(500):Internal server error' });
