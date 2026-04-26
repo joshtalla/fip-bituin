@@ -19,30 +19,52 @@ exports.createTopLevelReply = async (req, res) => {
     if (!isValidUUID(postId)) {
         return res.status(400).json({ message: 'Invalid postId format (must be UUID)' });
     }
-
     // Validate content of reply after trimming it
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(400).json({ message: 'Content is required and cannot be empty.' });
     }
-
     // Enforce a maximum length for the content
     if (content.length > 1000) {
         return res.status(400).json({ message: 'Content must be under 1000 characters.' });
     }
 
-    // Check if post exists
+    // Auth logic
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: "No auth token" });
+    }
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme !== "Bearer" || !token) {
+        return res.status(401).json({ message: "Invalid authorization format" });
+    }
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+    const auth_user_id = data.user.id;
+
+    // For now, use a placeholder user object if skipping real user lookup
+    const user = {
+        id: auth_user_id, // Replace with real user id when ready
+        username: "TestUser", // Replace with real username from DB
+        language: "English"   // Replace with real language from DB
+    };
+
     try {
         const postExists = await replyService.checkPostExists(postId);
         if (!postExists) {
             return res.status(404).json({ message: 'Post not found.' });
         }
-        res.status(501).json({ message: 'Not implemented: post existence check done' });
+
+        // Call the service to insert the reply
+        const reply = await replyService.createTopLevelReply(postId, user, content);
+
+        // Respond with the created reply
+        res.status(201).json(reply);
     } catch (err) {
-        console.error('Error checking post existence:', err);
+        console.error('Error creating reply:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
-
-    res.status(501).json({ message: 'Not implemented: create top-level reply (validation done)' });
 };
 
 /**
