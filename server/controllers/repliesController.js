@@ -8,7 +8,6 @@ function isValidUUID(uuid) {
 /**
  * POST /api/posts/:postId/replies
  * 
- * 
  * Controller for creating a top-level reply to a post.
  */
 exports.createTopLevelReply = async (req, res) => {
@@ -63,6 +62,55 @@ exports.createTopLevelReply = async (req, res) => {
         res.status(201).json(reply);
     } catch (err) {
         console.error('Error creating reply:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+/**
+ * POST /api/replies/:replyId/replies
+ * 
+ * Controller for creating a nested reply to an existing reply.
+ */
+exports.createNestedReply = async (req, res) => {
+    const replyId = req.params.replyId;
+    const { content } = req.body || {};
+
+    // Validate replyId
+    if (!isValidUUID(replyId)) {
+        return res.status(400).json({ message: 'Invalid replyId format (must be UUID)' });
+    }
+    // Validate content
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ message: 'Content is required and cannot be empty.' });
+    }
+    if (content.length > 1000) {
+        return res.status(400).json({ message: 'Content must be under 1000 characters.' });
+    }
+
+    // (Optional) Auth logic (reuse from createTopLevelReply)
+    // For now, use a placeholder user object if skipping auth:
+    const user = {
+        id: "test-user-id",
+        username: "TestUser",
+        language: "English"
+    };
+
+    try {
+        // Fetch parent reply
+        const parentReply = await replyService.getReplyById(replyId);
+        if (!parentReply) {
+            return res.status(404).json({ message: 'Parent reply not found.' });
+        }
+        if (parentReply.parent_reply_id !== null) {
+            return res.status(400).json({ message: 'Replies can only be nested one level deep.' });
+        }
+
+        // Insert nested reply
+        const reply = await replyService.createNestedReply(parentReply, user, content);
+
+        res.status(201).json(reply);
+    } catch (err) {
+        console.error('Error creating nested reply:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
