@@ -1,15 +1,40 @@
 const supabase = require('../supabaseClient');
 
 /**
- * Related: POST /api/posts/:postId/replies
- * 
- * Service for handling replies related operations, such as creating replies and fetching replies for a post.
+ * -----------------------------------------------------------------------------
+ * Replies Service
+ * -----------------------------------------------------------------------------
+ * Purpose:
+ *   Encapsulates reply-related business logic and data access.
+ *
+ * How this file connects to others:
+ *   - Called by controllers/repliesController.js
+ *   - Uses server/supabaseClient.js for database operations
+ *   - Powers routes in routes/replies.js through controller delegation
+ *
+ * Responsibilities:
+ *   - Create top-level and nested replies
+ *   - Fetch paginated replies for a post
+ *   - Enforce/assist reply constraints (post existence checks, parent lookup)
+ *   - Apply content flagging + moderation logging
+ *   - Update reply_count on parent posts
+ *   - Shape public API reply payloads by removing internal fields
+ * -----------------------------------------------------------------------------
+ */
+
+/**
+ * Create a top-level reply.
+ *
+ * @param {string} postId - Parent post UUID.
+ * @param {{ id: string, anonymous_name: string, language: string }} user
+ * @param {string} content
+ * @returns {Promise<object>} Public reply shape.
  */
 exports.createTopLevelReply = async (postId, user, content) => {
     // Content safety filtering: Check if content contains email or phone number and flag it if so
     const isFlagged = containsEmailOrPhone(content);
 
-    // Insert the reply into Supabase
+    // Insert reply row and fetch inserted data
     const { data, error } = await supabase
         .from('replies')
         .insert([{
@@ -28,26 +53,31 @@ exports.createTopLevelReply = async (postId, user, content) => {
         throw error;
     }
 
-    // Log to moderation if flagged
+    // Optional moderation side effect
     if (data.is_flagged) {
         await exports.logModerationFlag(data, "auto-flagged: email/phone detected");
     }
 
     await exports.incrementReplyCount(postId);
 
+    // Remove internal fields before controller returns response
     return toPublicReply(data);
 };
 
 /**
- * Related: POST /api/replies/:replyId/replies
- * 
- * Service for creating a nested reply to an existing reply. 
- * 
- * Return: The created nested reply object.
+ * Create a nested reply under a parent reply.
+ *
+ * Note:
+ *   Parent depth validation is performed in the controller before calling this.
+ *
+ * @param {{ id: string, post_id: string }} parentReply
+ * @param {{ id: string, anonymous_name: string, language: string }} user
+ * @param {string} content
+ * @returns {Promise<object>} Public reply shape.
  */
 
 exports.createNestedReply = async (parentReply, user, content) => {
-    // Content safety filtering: Check if content contains email or phone number and flag it if so
+    // Content safety flagging
     const isFlagged = containsEmailOrPhone(content);
 
     const { data, error } = await supabase
@@ -68,23 +98,27 @@ exports.createNestedReply = async (parentReply, user, content) => {
         throw error;
     }
 
-    // Log to moderation if flagged
+    // Optional moderation side effect
     if (data.is_flagged) {
         await exports.logModerationFlag(data, "auto-flagged: email/phone detected");
     }
 
     await exports.incrementReplyCount(parentReply.post_id);
 
+    // Remove internal fields before controller returns response
     return toPublicReply(data);
 };
 
 /**
- * Related: GET /api/posts/:postId/replies
- * 
- * Service for fetching all replies for a post. 
- * Supports pagination via page and limit parameters(20 messages per page). 
- * 
- * Return: Object containing the list of replies and the total count.
+ * Fetch paginated replies for a post.
+ *
+ * Returns replies in chronological order, as a flat list.
+ * Frontend is expected to reconstruct hierarchy via parent_reply_id.
+ *
+ * @param {string} postId
+ * @param {number} page
+ * @param {number} limit
+ * @returns {Promise<{replies: object[], total: number}>}
  */
 exports.getRepliesForPost = async (postId, page = 1, limit = 20) => {
     const from = (page - 1) * limit;
@@ -107,6 +141,12 @@ exports.getRepliesForPost = async (postId, page = 1, limit = 20) => {
     };
 };
 
+/**
+ * Check whether a post exists.
+ *
+ * @param {string} postId
+ * @returns {Promise<boolean>}
+ */
 exports.checkPostExists = async (postId) => {
     const { data, error } = await supabase
         .from('posts')
@@ -121,6 +161,12 @@ exports.checkPostExists = async (postId) => {
     return !!data;
 };
 
+/**
+ * Resolve reply identity defaults from users table.
+ *
+ * @param {string} authUserId
+ * @returns {Promise<{anonymous_name: string, language: string}>}
+ */
 exports.getUserProfile = async (authUserId) => {
     const { data, error } = await supabase
         .from('users')
@@ -146,6 +192,12 @@ function containsEmailOrPhone(text) {
     return emailRegex.test(text) || phoneRegex.test(text);
 }
 
+/**
+ * Increment reply_count on a post.
+ *
+ * @param {string} postId
+ * @returns {Promise<void>}
+ */
 exports.incrementReplyCount = async (postId) => {
     // Fetch current count
     const { data, error: fetchError } = await supabase
@@ -167,6 +219,14 @@ exports.incrementReplyCount = async (postId) => {
     if (updateError) throw updateError;
 };
 
+/**
+ * Fetch a reply by ID.
+ *
+ * Used by controller to validate nested-reply parent existence/depth.
+ *
+ * @param {string} replyId
+ * @returns {Promise<{id: string, post_id: string, parent_reply_id: string | null} | null>}
+ */
 exports.getReplyById = async (replyId) => {
     const { data, error } = await supabase
         .from('replies')
@@ -180,6 +240,13 @@ exports.getReplyById = async (replyId) => {
     return data;
 };
 
+/**
+ * Write moderation audit record for flagged reply content.
+ *
+ * @param {{ id: string, user_id: string, content: string }} reply
+ * @param {string} reason
+ * @returns {Promise<void>}
+ */
 exports.logModerationFlag = async (reply, reason) => {
     const { error } = await supabase
         .from('moderation_logs')
