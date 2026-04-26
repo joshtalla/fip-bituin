@@ -28,29 +28,30 @@ exports.createTopLevelReply = async (req, res) => {
         return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
-    // 401: Auth logic
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ message: "Unauthenticated: No auth token" });
-    }
-    const [scheme, token] = authHeader.split(" ");
-    if (scheme !== "Bearer" || !token) {
-        return res.status(401).json({ message: "Unauthenticated: Invalid authorization format" });
-    }
-    const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data.user) {
-        return res.status(401).json({ message: "Unauthenticated: Invalid token" });
-    }
-    const auth_user_id = data.user.id;
-
-    // For now, use a placeholder user object if skipping real user lookup
-    const user = {
-        id: auth_user_id, // Replace with real user id when ready
-        username: "TestUser", // Replace with real username from DB
-        language: "English"   // Replace with real language from DB
-    };
-
     try {
+        // 401: Auth logic
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: "Unauthenticated: No auth token" });
+        }
+        const [scheme, token] = authHeader.split(" ");
+        if (scheme !== "Bearer" || !token) {
+            return res.status(401).json({ message: "Unauthenticated: Invalid authorization format" });
+        }
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data.user) {
+            return res.status(401).json({ message: "Unauthenticated: Invalid token" });
+        }
+
+        const auth_user_id = data.user.id;
+        const userProfile = await replyService.getUserProfile(auth_user_id);
+
+        const user = {
+            id: auth_user_id,
+            anonymous_name: userProfile.anonymous_name,
+            language: userProfile.language
+        };
+
         const postExists = await replyService.checkPostExists(postId);
         if (!postExists) {
             return res.status(404).json({ message: 'Post not found.' });
@@ -88,15 +89,30 @@ exports.createNestedReply = async (req, res) => {
         return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
-    // 401: (Optional) Auth logic (reuse from createTopLevelReply)
-    // For now, use a placeholder user object if skipping auth:
-    const user = {
-        id: "test-user-id",
-        username: "TestUser",
-        language: "English"
-    };
-
     try {
+        // 401: Auth logic (reuse from createTopLevelReply)
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: "Unauthenticated: No auth token" });
+        }
+        const [scheme, token] = authHeader.split(" ");
+        if (scheme !== "Bearer" || !token) {
+            return res.status(401).json({ message: "Unauthenticated: Invalid authorization format" });
+        }
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data.user) {
+            return res.status(401).json({ message: "Unauthenticated: Invalid token" });
+        }
+
+        const auth_user_id = data.user.id;
+        const userProfile = await replyService.getUserProfile(auth_user_id);
+
+        const user = {
+            id: auth_user_id,
+            anonymous_name: userProfile.anonymous_name,
+            language: userProfile.language
+        };
+
         // Fetch parent reply
         const parentReply = await replyService.getReplyById(replyId);
         if (!parentReply) {
@@ -134,6 +150,11 @@ exports.getRepliesForPost = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 20;
 
     try {
+        const postExists = await replyService.checkPostExists(postId);
+        if (!postExists) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
         const { replies, total } = await replyService.getRepliesForPost(postId, page, limit);
         res.status(200).json({
             replies,

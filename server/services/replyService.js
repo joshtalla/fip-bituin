@@ -16,7 +16,7 @@ exports.createTopLevelReply = async (postId, user, content) => {
             post_id: postId,
             parent_reply_id: null,
             user_id: user.id,
-            anonymous_name: user.username,
+            anonymous_name: user.anonymous_name,
             content: content.trim(),
             language: user.language,
             is_flagged: isFlagged
@@ -56,7 +56,7 @@ exports.createNestedReply = async (parentReply, user, content) => {
             post_id: parentReply.post_id,
             parent_reply_id: parentReply.id,
             user_id: user.id,
-            anonymous_name: user.username,
+            anonymous_name: user.anonymous_name,
             content: content.trim(),
             language: user.language,
             is_flagged: isFlagged
@@ -119,6 +119,24 @@ exports.checkPostExists = async (postId) => {
     }
 
     return !!data;
+};
+
+exports.getUserProfile = async (authUserId) => {
+    const { data, error } = await supabase
+        .from('users')
+        .select('anonymous_name, language')
+        .eq('id', authUserId)
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    if (!data?.anonymous_name || !data?.language) {
+        throw new Error('User profile not found');
+    }
+
+    return data;
 };
 
 function containsEmailOrPhone(text) {
