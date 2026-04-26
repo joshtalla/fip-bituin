@@ -6,25 +6,48 @@ const supabase = require('../supabaseClient');
  * Service for handling replies related operations, such as creating replies and fetching replies for a post.
  */
 exports.createTopLevelReply = async (postId, user, content) => {
-  // Insert the reply into Supabase
-  const { data, error } = await supabase
-    .from('replies')
-    .insert([{
-      post_id: postId,
-      parent_reply_id: null,
-      user_id: user.id,
-      anonymous_name: user.username,
-      content: content.trim(),
-      language: user.language
-    }])
-    .select('id, post_id, parent_reply_id, anonymous_name, content, language, created_at')
-    .single();
+    // Insert the reply into Supabase
+    const { data, error } = await supabase
+      .from('replies')
+      .insert([{
+        post_id: postId,
+        parent_reply_id: null,
+        user_id: user.id,
+        anonymous_name: user.username,
+        content: content.trim(),
+        language: user.language
+      }])
+      .select('id, post_id, parent_reply_id, anonymous_name, content, language, created_at')
+      .single();
 
-  if (error) {
-    throw error;
-  }
+    if (error) {
+      throw error;
+    }
 
-  return data;
+    await exports.incrementReplyCount(postId);
+
+    return data;
+};
+
+exports.incrementReplyCount = async (postId) => {
+    // Fetch current count
+    const { data, error: fetchError } = await supabase
+        .from('posts')
+        .select('reply_count')
+        .eq('id', postId)
+        .single();
+
+    if (fetchError) throw fetchError;
+
+    const newCount = (data.reply_count || 0) + 1;
+
+    // Update count
+    const { error: updateError } = await supabase
+        .from('posts')
+        .update({ reply_count: newCount })
+        .eq('id', postId);
+
+    if (updateError) throw updateError;
 };
 
 exports.getReplyById = async (replyId) => {
@@ -65,6 +88,8 @@ exports.createNestedReply = async (parentReply, user, content) => {
     if (error) {
         throw error;
     }
+
+    await exports.incrementReplyCount(parentReply.post_id);
 
     return data;
 };
