@@ -10,7 +10,7 @@ const repliesController = require('../controllers/repliesController');
  * Example: GET http://localhost:3000/api/test
  */
 router.get('/test', (req, res) => {
-  res.status(200).json({ message: 'Replies route is working!' });
+    res.status(200).json({ message: 'Replies route is working!' });
 });
 
 /**
@@ -20,7 +20,7 @@ router.get('/test', (req, res) => {
  * Example: POST http://localhost:3000/api/posts/123/replies
  */
 router.post('/posts/:postId/replies', (req, res) => {
-  res.status(501).json({ message: 'Not implemented(POST): create top-level reply' });
+    res.status(501).json({ message: 'Not implemented(POST): create top-level reply' });
 });
 
 /**
@@ -30,7 +30,7 @@ router.post('/posts/:postId/replies', (req, res) => {
  * Example: POST http://localhost:3000/replies/456/replies
  */
 router.post('/replies/:replyId/replies', (req, res) => {
-  res.status(501).json({ message: 'Not implemented(POST): create nested reply' });
+    res.status(501).json({ message: 'Not implemented(POST): create nested reply' });
 });
 
 /**
