@@ -4,21 +4,25 @@ const supabase = require('../supabaseClient');
  * Service for handling replies related operations, such as creating replies and fetching replies for a post.
  */
 exports.createTopLevelReply = async (postId, user, content) => {
-  // Placeholder for now
-  return null;
-};
+  // Insert the reply into Supabase
+  const { data, error } = await supabase
+    .from('replies')
+    .insert([{
+      post_id: postId,
+      parent_reply_id: null,
+      user_id: user.id,
+      anonymous_name: user.username,
+      content: content.trim(),
+      language: user.language
+    }])
+    .select('id, post_id, parent_reply_id, anonymous_name, content, language, created_at')
+    .single();
 
-exports.checkPostExists = async (postId) => {
-    const { data, error } = await supabase
-        .from('posts')
-        .select('id')
-        .eq('id', postId)
-        .single();
+  if (error) {
+    throw error;
+  }
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
-        throw error;
-    }
-    return !!data;
+  return data;
 };
 
 /**
