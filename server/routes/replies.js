@@ -1,6 +1,7 @@
 // Import the Express library and create a new router object from Express
 const express = require('express');
 const router = express.Router();
+const repliesController = require('../controllers/repliesController');
 
 /**
  * 'Test' endpoint for the replies route, this will response to GET requests at
@@ -19,7 +20,7 @@ router.get('/test', (req, res) => {
  * Example: POST http://localhost:3000/api/posts/123/replies
  */
 router.post('/posts/:postId/replies', (req, res) => {
-  res.status(501).json({ message: 'Not implemented: create top-level reply' });
+  res.status(501).json({ message: 'Not implemented(POST): create top-level reply' });
 });
 
 /**
@@ -29,18 +30,16 @@ router.post('/posts/:postId/replies', (req, res) => {
  * Example: POST http://localhost:3000/replies/456/replies
  */
 router.post('/replies/:replyId/replies', (req, res) => {
-  res.status(501).json({ message: 'Not implemented: create nested reply' });
+  res.status(501).json({ message: 'Not implemented(POST): create nested reply' });
 });
 
 /**
  * GET /api/posts/:postId/replies
- * Placeholder for fetching all replies for a post.
  * 
  Example: GET http://localhost:3000/api/posts/123/replies
  */
-router.get('/posts/:postId/replies', (req, res) => {
-  res.status(501).json({ message: 'Not implemented: fetch replies for post' });
-});
+router.get('/posts/:postId/replies', repliesController.getRepliesForPost);
+
 
 // Export the router object so it can be used in other parts of the application
 module.exports = router;
