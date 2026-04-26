@@ -1,3 +1,4 @@
+const supabase = require('../supabaseClient');
 const replyService = require('../services/replyService');
 
 // Regex to validate UUID format
@@ -12,7 +13,7 @@ function isValidUUID(uuid) {
  */
 exports.createTopLevelReply = async (req, res) => {
     const postId = req.params.postId;
-    const { content } = req.body;
+    const { content } = req.body || {};
 
     // 400: Validate postId is in UUID format
     if (!isValidUUID(postId)) {

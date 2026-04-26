@@ -23,13 +23,11 @@ router.post('/posts/:postId/replies', repliesController.createTopLevelReply);
 
 /**
  * POST /api/replies/:replyId/replies
- * Placeholder for creating a nested reply.
+ * Create a nested reply.
  * 
  * Example: POST http://localhost:3000/replies/456/replies
  */
-router.post('/replies/:replyId/replies', (req, res) => {
-    res.status(501).json({ message: 'Not implemented(POST): create nested reply' });
-});
+router.post('/replies/:replyId/replies', repliesController.createNestedReply);
 
 /**
  * GET /api/posts/:postId/replies

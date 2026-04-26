@@ -35,7 +35,7 @@ exports.createTopLevelReply = async (postId, user, content) => {
 
     await exports.incrementReplyCount(postId);
 
-    return data;
+    return toPublicReply(data);
 };
 
 /**
@@ -75,7 +75,7 @@ exports.createNestedReply = async (parentReply, user, content) => {
 
     await exports.incrementReplyCount(parentReply.post_id);
 
-    return data;
+    return toPublicReply(data);
 };
 
 /**
@@ -105,6 +105,20 @@ exports.getRepliesForPost = async (postId, page = 1, limit = 20) => {
         replies: data || [],
         total: count || 0
     };
+};
+
+exports.checkPostExists = async (postId) => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('id', postId)
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    return !!data;
 };
 
 function containsEmailOrPhone(text) {
@@ -160,3 +174,12 @@ exports.logModerationFlag = async (reply, reason) => {
         }]);
     if (error) throw error;
 };
+
+function toPublicReply(reply) {
+    if (!reply) {
+        return reply;
+    }
+
+    const { user_id, is_flagged, updated_at, ...publicReply } = reply;
+    return publicReply;
+}
