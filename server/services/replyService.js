@@ -6,6 +6,9 @@ const supabase = require('../supabaseClient');
  * Service for handling replies related operations, such as creating replies and fetching replies for a post.
  */
 exports.createTopLevelReply = async (postId, user, content) => {
+    // Content safety filtering: Check if content contains email or phone number and flag it if so
+    const isFlagged = containsEmailOrPhone(content);
+
     // Insert the reply into Supabase
     const { data, error } = await supabase
       .from('replies')
@@ -29,40 +32,6 @@ exports.createTopLevelReply = async (postId, user, content) => {
     return data;
 };
 
-exports.incrementReplyCount = async (postId) => {
-    // Fetch current count
-    const { data, error: fetchError } = await supabase
-        .from('posts')
-        .select('reply_count')
-        .eq('id', postId)
-        .single();
-
-    if (fetchError) throw fetchError;
-
-    const newCount = (data.reply_count || 0) + 1;
-
-    // Update count
-    const { error: updateError } = await supabase
-        .from('posts')
-        .update({ reply_count: newCount })
-        .eq('id', postId);
-
-    if (updateError) throw updateError;
-};
-
-exports.getReplyById = async (replyId) => {
-    const { data, error } = await supabase
-        .from('replies')
-        .select('id, post_id, parent_reply_id')
-        .eq('id', replyId)
-        .single();
-
-    if (error && error.code !== 'PGRST116') {
-        throw error;
-    }
-    return data;
-};
-
 /**
  * Related: POST /api/replies/:replyId/replies
  * 
@@ -72,6 +41,9 @@ exports.getReplyById = async (replyId) => {
  */
 
 exports.createNestedReply = async (parentReply, user, content) => {
+    // Content safety filtering: Check if content contains email or phone number and flag it if so
+    const isFlagged = containsEmailOrPhone(content);
+
     const { data, error } = await supabase
         .from('replies')
         .insert([{
@@ -121,4 +93,45 @@ exports.getRepliesForPost = async (postId, page = 1, limit = 20) => {
         replies: data || [],
         total: count || 0
     };
+};
+
+function containsEmailOrPhone(text) {
+    // Simple regex for email and phone (can be improved)
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+    const phoneRegex = /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/;
+    return emailRegex.test(text) || phoneRegex.test(text);
+}
+
+exports.incrementReplyCount = async (postId) => {
+    // Fetch current count
+    const { data, error: fetchError } = await supabase
+        .from('posts')
+        .select('reply_count')
+        .eq('id', postId)
+        .single();
+
+    if (fetchError) throw fetchError;
+
+    const newCount = (data.reply_count || 0) + 1;
+
+    // Update count
+    const { error: updateError } = await supabase
+        .from('posts')
+        .update({ reply_count: newCount })
+        .eq('id', postId);
+
+    if (updateError) throw updateError;
+};
+
+exports.getReplyById = async (replyId) => {
+    const { data, error } = await supabase
+        .from('replies')
+        .select('id, post_id, parent_reply_id')
+        .eq('id', replyId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') {
+        throw error;
+    }
+    return data;
 };
