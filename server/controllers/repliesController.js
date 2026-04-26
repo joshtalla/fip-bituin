@@ -6,7 +6,7 @@ function isValidUUID(uuid) {
 }
 
 /**
- * POST /api/posts/:postId/replies
+ * Related: POST /api/posts/:postId/replies
  * 
  * Controller for creating a top-level reply to a post.
  */
@@ -67,7 +67,7 @@ exports.createTopLevelReply = async (req, res) => {
 };
 
 /**
- * POST /api/replies/:replyId/replies
+ * Related: POST /api/replies/:replyId/replies
  * 
  * Controller for creating a nested reply to an existing reply.
  */
@@ -116,7 +116,7 @@ exports.createNestedReply = async (req, res) => {
 };
 
 /**
- * GET /api/posts/:postId/replies
+ * Related: GET /api/posts/:postId/replies
  * 
  * Controller for fetching all replies for a post.
  * Responds with a placeholder message for now.
