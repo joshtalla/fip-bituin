@@ -30,6 +30,18 @@ exports.createTopLevelReply = async (req, res) => {
         return res.status(400).json({ message: 'Content must be under 1000 characters.' });
     }
 
+    // Check if post exists
+    try {
+        const postExists = await replyService.checkPostExists(postId);
+        if (!postExists) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+        res.status(501).json({ message: 'Not implemented: post existence check done' });
+    } catch (err) {
+        console.error('Error checking post existence:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+
     res.status(501).json({ message: 'Not implemented: create top-level reply (validation done)' });
 };
 

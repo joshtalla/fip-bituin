@@ -8,6 +8,19 @@ exports.createTopLevelReply = async (postId, user, content) => {
   return null;
 };
 
+exports.checkPostExists = async (postId) => {
+    const { data, error } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('id', postId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        throw error;
+    }
+    return !!data;
+};
+
 /**
  * Service for fetching all replies for a post. 
  * Supports pagination via page and limit parameters(20 messages per page). 
