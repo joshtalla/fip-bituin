@@ -12,7 +12,25 @@ function isValidUUID(uuid) {
  * Controller for creating a top-level reply to a post.
  */
 exports.createTopLevelReply = async (req, res) => {
-  res.status(501).json({ message: 'Not implemented: create top-level reply' });
+    const postId = req.params.postId;
+    const { content } = req.body;
+
+    // Validate postId is in UUID format
+    if (!isValidUUID(postId)) {
+        return res.status(400).json({ message: 'Invalid postId format (must be UUID)' });
+    }
+
+    // Validate content of reply after trimming it
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+        return res.status(400).json({ message: 'Content is required and cannot be empty.' });
+    }
+
+    // Enforce a maximum length for the content
+    if (content.length > 1000) {
+        return res.status(400).json({ message: 'Content must be under 1000 characters.' });
+    }
+
+    res.status(501).json({ message: 'Not implemented: create top-level reply (validation done)' });
 };
 
 /**
