@@ -14,31 +14,31 @@ exports.createTopLevelReply = async (req, res) => {
     const postId = req.params.postId;
     const { content } = req.body;
 
-    // Validate postId is in UUID format
+    // 400: Validate postId is in UUID format
     if (!isValidUUID(postId)) {
-        return res.status(400).json({ message: 'Invalid postId format (must be UUID)' });
+        return res.status(400).json({ message: 'Invalid field: postId (must be UUID)' });
     }
-    // Validate content of reply after trimming it
+    // 400: Validate content of reply after trimming it
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
-        return res.status(400).json({ message: 'Content is required and cannot be empty.' });
+        return res.status(400).json({ message: 'Invalid field: content (required and cannot be empty)' });
     }
-    // Enforce a maximum length for the content
+    // 400: Enforce a maximum length for the content
     if (content.length > 1000) {
-        return res.status(400).json({ message: 'Content must be under 1000 characters.' });
+        return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
-    // Auth logic
+    // 401: Auth logic
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-        return res.status(401).json({ message: "No auth token" });
+        return res.status(401).json({ message: "Unauthenticated: No auth token" });
     }
     const [scheme, token] = authHeader.split(" ");
     if (scheme !== "Bearer" || !token) {
-        return res.status(401).json({ message: "Invalid authorization format" });
+        return res.status(401).json({ message: "Unauthenticated: Invalid authorization format" });
     }
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data.user) {
-        return res.status(401).json({ message: "Invalid token" });
+        return res.status(401).json({ message: "Unauthenticated: Invalid token" });
     }
     const auth_user_id = data.user.id;
 
@@ -75,19 +75,19 @@ exports.createNestedReply = async (req, res) => {
     const replyId = req.params.replyId;
     const { content } = req.body || {};
 
-    // Validate replyId
+    // 400: Validate replyId
     if (!isValidUUID(replyId)) {
-        return res.status(400).json({ message: 'Invalid replyId format (must be UUID)' });
+        return res.status(400).json({ message: 'Invalid field: replyId (must be UUID)' });
     }
-    // Validate content
+    // 400: Validate content
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
-        return res.status(400).json({ message: 'Content is required and cannot be empty.' });
+        return res.status(400).json({ message: 'Invalid field: content (required and cannot be empty)' });
     }
     if (content.length > 1000) {
-        return res.status(400).json({ message: 'Content must be under 1000 characters.' });
+        return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
-    // (Optional) Auth logic (reuse from createTopLevelReply)
+    // 401: (Optional) Auth logic (reuse from createTopLevelReply)
     // For now, use a placeholder user object if skipping auth:
     const user = {
         id: "test-user-id",
@@ -101,8 +101,9 @@ exports.createNestedReply = async (req, res) => {
         if (!parentReply) {
             return res.status(404).json({ message: 'Parent reply not found.' });
         }
+        // 400: Enforce one-level nesting
         if (parentReply.parent_reply_id !== null) {
-            return res.status(400).json({ message: 'Replies can only be nested one level deep.' });
+            return res.status(400).json({ message: 'Nesting depth exceeded: Replies can only be nested one level deep.' });
         }
 
         // Insert nested reply
