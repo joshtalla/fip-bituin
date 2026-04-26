@@ -11,20 +11,26 @@ exports.createTopLevelReply = async (postId, user, content) => {
 
     // Insert the reply into Supabase
     const { data, error } = await supabase
-      .from('replies')
-      .insert([{
-        post_id: postId,
-        parent_reply_id: null,
-        user_id: user.id,
-        anonymous_name: user.username,
-        content: content.trim(),
-        language: user.language
-      }])
-      .select('id, post_id, parent_reply_id, anonymous_name, content, language, created_at')
-      .single();
+        .from('replies')
+        .insert([{
+            post_id: postId,
+            parent_reply_id: null,
+            user_id: user.id,
+            anonymous_name: user.username,
+            content: content.trim(),
+            language: user.language,
+            is_flagged: isFlagged
+        }])
+        .select('id, post_id, parent_reply_id, anonymous_name, content, language, is_flagged, user_id, created_at')
+        .single();
 
     if (error) {
-      throw error;
+        throw error;
+    }
+
+    // Log to moderation if flagged
+    if (data.is_flagged) {
+        await exports.logModerationFlag(data, "auto-flagged: email/phone detected");
     }
 
     await exports.incrementReplyCount(postId);
@@ -52,13 +58,19 @@ exports.createNestedReply = async (parentReply, user, content) => {
             user_id: user.id,
             anonymous_name: user.username,
             content: content.trim(),
-            language: user.language
+            language: user.language,
+            is_flagged: isFlagged
         }])
-        .select('id, post_id, parent_reply_id, anonymous_name, content, language, created_at')
+        .select('id, post_id, parent_reply_id, anonymous_name, content, language, is_flagged, user_id, created_at')
         .single();
 
     if (error) {
         throw error;
+    }
+
+    // Log to moderation if flagged
+    if (data.is_flagged) {
+        await exports.logModerationFlag(data, "auto-flagged: email/phone detected");
     }
 
     await exports.incrementReplyCount(parentReply.post_id);
@@ -134,4 +146,17 @@ exports.getReplyById = async (replyId) => {
         throw error;
     }
     return data;
+};
+
+exports.logModerationFlag = async (reply, reason) => {
+    const { error } = await supabase
+        .from('moderation_logs')
+        .insert([{
+            reply_id: reply.id,
+            user_id: reply.user_id,
+            content: reply.content,
+            reason: reason,
+            created_at: new Date().toISOString()
+        }]);
+    if (error) throw error;
 };
