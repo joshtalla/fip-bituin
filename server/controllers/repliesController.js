@@ -1,35 +1,71 @@
+/**
+ * -----------------------------------------------------------------------------
+ * Replies Controller
+ * -----------------------------------------------------------------------------
+ * Purpose:
+ *   Handles HTTP request/response flow for replies endpoints.
+ *
+ * How this file connects to others:
+ *   - Called by routes/replies.js
+ *   - Uses services/replyService.js for database/business operations
+ *   - Uses supabase.auth.getUser(token) to resolve authenticated users
+ *
+ * Responsibilities:
+ *   - Parse and validate request inputs (params, query, body)
+ *   - Enforce API-level error responses and status codes
+ *   - Delegate persistence/business logic to the service layer
+ * -----------------------------------------------------------------------------
+ */
+
 const supabase = require('../supabaseClient');
 const replyService = require('../services/replyService');
 
-// Regex to validate UUID format
+/**
+ * Validate UUID format for route params.
+ *
+ * @param {string} uuid
+ * @returns {boolean}
+ */
 function isValidUUID(uuid) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid);
 }
 
 /**
- * Related: POST /api/posts/:postId/replies
- * 
- * Controller for creating a top-level reply to a post.
+ * POST /api/posts/:postId/replies
+ *
+ * Creates a top-level reply for a given post.
+ *
+ * Flow:
+ *   1) Validate route params and content
+ *   2) Resolve authenticated user from Bearer token
+ *   3) Load user profile (anonymous_name + language)
+ *   4) Confirm post exists
+ *   5) Delegate insert to service layer
+ *
+ * Returns:
+ *   201 with public reply shape on success
+ *   400/401/404 for expected validation/auth/not-found failures
+ *   500 for unexpected server errors
  */
 exports.createTopLevelReply = async (req, res) => {
     const postId = req.params.postId;
     const { content } = req.body || {};
 
-    // 400: Validate postId is in UUID format
+    // 400: Invalid route param
     if (!isValidUUID(postId)) {
         return res.status(400).json({ message: 'Invalid field: postId (must be UUID)' });
     }
-    // 400: Validate content of reply after trimming it
+    // 400: Invalid or missing content
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(400).json({ message: 'Invalid field: content (required and cannot be empty)' });
     }
-    // 400: Enforce a maximum length for the content
+    // 400: Length validation
     if (content.length > 1000) {
         return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
     try {
-        // 401: Auth logic
+        // 401: Auth resolution from Bearer token
         const authHeader = req.headers.authorization;
         if (!authHeader) {
             return res.status(401).json({ message: "Unauthenticated: No auth token" });
@@ -44,6 +80,8 @@ exports.createTopLevelReply = async (req, res) => {
         }
 
         const auth_user_id = data.user.id;
+
+        // Resolve reply identity defaults from users table
         const userProfile = await replyService.getUserProfile(auth_user_id);
 
         const user = {
@@ -57,7 +95,7 @@ exports.createTopLevelReply = async (req, res) => {
             return res.status(404).json({ message: 'Post not found.' });
         }
 
-        // Call the service to insert the reply
+        // Delegate persistence/business logic to service
         const reply = await replyService.createTopLevelReply(postId, user, content);
 
         // Respond with the created reply
@@ -69,19 +107,33 @@ exports.createTopLevelReply = async (req, res) => {
 };
 
 /**
- * Related: POST /api/replies/:replyId/replies
- * 
- * Controller for creating a nested reply to an existing reply.
+ * POST /api/replies/:replyId/replies
+ *
+ * Creates a nested reply under an existing top-level reply.
+ * Enforces one-level-only nesting.
+ *
+ * Flow:
+ *   1) Validate route params and content
+ *   2) Resolve authenticated user from Bearer token
+ *   3) Load user profile (anonymous_name + language)
+ *   4) Fetch parent reply and validate nesting depth
+ *   5) Delegate insert to service layer
+ *
+ * Returns:
+ *   201 on success
+ *   400 if parent reply is already nested
+ *   401/404 for auth/not-found failures
+ *   500 for unexpected errors
  */
 exports.createNestedReply = async (req, res) => {
     const replyId = req.params.replyId;
     const { content } = req.body || {};
 
-    // 400: Validate replyId
+    // 400: Invalid route param
     if (!isValidUUID(replyId)) {
         return res.status(400).json({ message: 'Invalid field: replyId (must be UUID)' });
     }
-    // 400: Validate content
+    // 400: Invalid or missing content
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
         return res.status(400).json({ message: 'Invalid field: content (required and cannot be empty)' });
     }
@@ -90,7 +142,7 @@ exports.createNestedReply = async (req, res) => {
     }
 
     try {
-        // 401: Auth logic (reuse from createTopLevelReply)
+        // 401: Auth resolution from Bearer token
         const authHeader = req.headers.authorization;
         if (!authHeader) {
             return res.status(401).json({ message: "Unauthenticated: No auth token" });
@@ -105,6 +157,8 @@ exports.createNestedReply = async (req, res) => {
         }
 
         const auth_user_id = data.user.id;
+
+        // Resolve reply identity defaults from users table
         const userProfile = await replyService.getUserProfile(auth_user_id);
 
         const user = {
@@ -113,7 +167,7 @@ exports.createNestedReply = async (req, res) => {
             language: userProfile.language
         };
 
-        // Fetch parent reply
+        // Validate parent reply existence/depth
         const parentReply = await replyService.getReplyById(replyId);
         if (!parentReply) {
             return res.status(404).json({ message: 'Parent reply not found.' });
@@ -123,7 +177,7 @@ exports.createNestedReply = async (req, res) => {
             return res.status(400).json({ message: 'Nesting depth exceeded: Replies can only be nested one level deep.' });
         }
 
-        // Insert nested reply
+        // Delegate persistence/business logic to service
         const reply = await replyService.createNestedReply(parentReply, user, content);
 
         res.status(201).json(reply);
@@ -134,10 +188,18 @@ exports.createNestedReply = async (req, res) => {
 };
 
 /**
- * Related: GET /api/posts/:postId/replies
- * 
- * Controller for fetching all replies for a post.
- * Responds with a placeholder message for now.
+ * GET /api/posts/:postId/replies
+ *
+ * Fetches replies for a post as a flat, paginated list.
+ * Frontend is responsible for nesting using parent_reply_id.
+ *
+ * Query params:
+ *   - page (default: 1)
+ *   - limit (default: 20)
+ *
+ * Returns:
+ *   200 with { replies, total, page, limit }
+ *   400/404/500 for invalid input, not found, or server failures
  */
 exports.getRepliesForPost = async (req, res) => {
     const postId = req.params.postId;

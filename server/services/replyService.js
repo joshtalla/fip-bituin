@@ -1,5 +1,3 @@
-const supabase = require('../supabaseClient');
-
 /**
  * -----------------------------------------------------------------------------
  * Replies Service
@@ -21,6 +19,8 @@ const supabase = require('../supabaseClient');
  *   - Shape public API reply payloads by removing internal fields
  * -----------------------------------------------------------------------------
  */
+
+const supabase = require('../supabaseClient');
 
 /**
  * Create a top-level reply.
