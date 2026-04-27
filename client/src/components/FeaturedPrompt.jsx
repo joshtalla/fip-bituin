@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
-import ReportButton from "./ReportButton";
-import ReportModal from "./ReportModal";
 
 // TODO: Add search functionality to the search bar
-// Search bar that appears when the user selects to show the search bar on nav
 function SearchBar() {
   return (
     <div className="flex h-[42px] w-full items-center rounded-full border border-[#D9D9D9] bg-[#FBF3E5] px-4 sm:w-[442px]">
@@ -19,7 +16,6 @@ function SearchBar() {
   );
 }
 
-// Card that appears and disappears to hint the user to hover over a star to view a post
 function HintCard({ visible }) {
   return (
     <div
@@ -34,7 +30,6 @@ function HintCard({ visible }) {
   );
 }
 
-// Button that leads to the create post page
 function CTAButton({ onClick }) {
   return (
     <button
@@ -56,11 +51,7 @@ export default function FeaturedPrompt({
 }) {
   const navigate = useNavigate();
   const [showHint, setShowHint] = useState(true);
-  
-  // State for testing the Report Modal
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Navigate to the create post page by passing the prompt id and prompt text to the create post page
   const handleCTAClick = () => {
     if (!dailyPrompt) return;
     navigate("/prompts/create", {
@@ -71,7 +62,6 @@ export default function FeaturedPrompt({
     });
   };
 
-  // Hide the hint card after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowHint(false);
@@ -101,26 +91,11 @@ export default function FeaturedPrompt({
         {isLoadingDailyPrompt ? "Loading..." : dailyPrompt?.prompt_text}
       </span>
       
-      {/* Hint card, CTA button, AND TEST REPORT BUTTON */}
+      {/* Hint card and CTA button (TEST BUTTON REMOVED) */}
       <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:mb-4 sm:flex-row sm:justify-between sm:gap-0">
         <HintCard visible={showHint} />
-        
-        {/* MOVED DOWN HERE TO AVOID THE INVISIBLE NAVBAR SHIELD */}
-        <ReportButton 
-          onClick={() => setIsReportModalOpen(true)} 
-          className="text-white opacity-100 bg-[#4C383A] p-2 rounded-md hover:bg-[#765C5F] relative z-50" 
-        />
-
         <CTAButton onClick={handleCTAClick} />
       </div>
-
-      {/* TEST MODAL */}
-      <ReportModal 
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        contentType="post"
-        contentId="test-123"
-      />
     </div>
   );
 }

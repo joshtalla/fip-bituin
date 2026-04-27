@@ -18,6 +18,7 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // Reset form whenever the modal opens
   useEffect(() => {
     if (isOpen) {
       setView('confirm');
@@ -42,12 +43,63 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
     setIsSubmitting(true);
     setError(null);
 
+    // --- REAL API CALL (Ready for when Backend is live) ---
+    /*
+    try {
+      // 1. Get auth token 
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      
+      if (!accessToken) throw new Error("Not authenticated");
+
+      // 2. Determine correct endpoint based on what we are reporting
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const endpoint = contentType === 'post' 
+        ? `/api/posts/${contentId}/report` 
+        : `/api/replies/${contentId}/report`;
+
+      // 3. Fire the request
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          reason: reason,
+          description: description
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) throw new Error("Invalid report reason.");
+        if (response.status === 401) throw new Error("Please log in again.");
+        throw new Error("Failed to submit report. Please try again later.");
+      }
+
+      // Success!
+      setView('success');
+      setTimeout(() => handleClose(), 2000);
+
+    } catch (err) {
+      // Shows error but DOES NOT close modal or clear input
+      setError(err.message || 'Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+    */
+
+    // --- CURRENT MOCK CALL (Delete this when uncommenting the real one) ---
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
+      
+      // TEST ERROR BEHAVIOR: Uncomment the line below to test what happens when it fails!
+      // throw new Error("Test 500 Error: Server disconnected");
+      
       setView('success');
       setTimeout(() => handleClose(), 2000);
     } catch (err) {
-      setError('Failed to submit report. Please try again.');
+      setError(err.message || 'Failed to submit report. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +211,7 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
 
             <div className="flex flex-col items-center">
               {error && (
-                <div className="text-red-500 font-semibold" style={{ marginBottom: '12px', fontFamily: "'Poppins', sans-serif", fontSize: '12px' }}>
+                <div className="text-red-500 font-semibold text-center w-full" style={{ marginBottom: '12px', fontFamily: "'Poppins', sans-serif", fontSize: '12px' }}>
                   {error}
                 </div>
               )}
@@ -193,9 +245,9 @@ export default function ReportModal({ isOpen, onClose, contentType, contentId })
               className="text-[#4C383A]"
               style={{ 
                 fontFamily: "'Darumadrop One', cursive", 
-                fontSize: '44px', // Bumped size to match Figma
+                fontSize: '44px',
                 lineHeight: '1',
-                marginTop: '10px' // Aligns perfectly with the X
+                marginTop: '10px' 
               }}
             >
               report submitted!
