@@ -1,4 +1,6 @@
-import { createContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AuthContext } from './auth-context';
+import { ensureUserProfile } from '../services/authService';
 import { supabase } from '../services/supabaseClient';
 
 /**
@@ -9,7 +11,6 @@ import { supabase } from '../services/supabaseClient';
  * 
  * Usage: Wrap the <App /> with <AuthProvider>, then use useContext(AuthContext) in any child component.
  */
-export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     // The logged-in user's profile from the database(it is null if the user is not logged/signed in).
@@ -28,7 +29,7 @@ export const AuthProvider = ({ children }) => {
 
             if (session) {
                 // User is logged in, fetch their profile from the database.
-                await fetchProfile(session.user.id, session.user);
+                await fetchProfile(session.user);
             } else {
                 // No saved login. Stop loading and show the login screen.
                 setLoading(false);
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
 
             if (session) {
                 // User logged in, fetch their profile.
-                await fetchProfile(session.user.id, session.user);
+                await fetchProfile(session.user);
             } else {
                 // User logged out, clear the profile.
                 setUser(null);
@@ -60,31 +61,49 @@ export const AuthProvider = ({ children }) => {
 
     // Load the user's profile data from the Supabase database table called users.
     // Gets called after login to retrieve the full user data (username, avatar, etc.).
-    const fetchProfile = async (userId, sessionUser) => {
+    const fetchProfile = async (sessionUser) => {
         try {
             // Ask the database for this user's profile.
             const { data, error } = await supabase
                 .from('users')
                 .select('*')
-                .eq('id', userId)
-                .single();
+                .eq('auth_user_id', sessionUser.id)
+                .maybeSingle();
 
             if (error && error.code === 'PGRST116') {
-                console.warn("Error fetching profile:", error.message);
+                const createdProfile = await ensureUserProfile({
+                    authUserId: sessionUser.id,
+                    email: sessionUser.email,
+                    location: sessionUser.user_metadata?.country,
+                    language: sessionUser.user_metadata?.language,
+                    username: sessionUser.user_metadata?.username,
+                });
 
-                setUser({ 
-                    id: userId, 
-                    email: sessionUser.email, 
-                    isProfileIncomplete: true });
+                setUser({
+                    ...createdProfile,
+                    authUserId: sessionUser.id,
+                    email: sessionUser.email,
+                    isProfileIncomplete: false,
+                });
             } else if (error) {
                 throw error;
             } else {
                 // Save the profile so the app can access it.
-                setUser({...data, isProfileIncomplete: false});
+                setUser({
+                    ...data,
+                    authUserId: sessionUser.id,
+                    email: sessionUser.email,
+                    isProfileIncomplete: false,
+                });
             }
         } catch (error) {
             // The database query failed or the profile doesn't exist.
             console.error("Error fetching profile:", error.message);
+            setUser({
+                authUserId: sessionUser.id,
+                email: sessionUser.email,
+                isProfileIncomplete: true,
+            });
         } finally {
             // Finish loading, whether it succeeded or failed.
             setLoading(false);

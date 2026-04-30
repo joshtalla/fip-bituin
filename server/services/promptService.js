@@ -1,5 +1,7 @@
 const supabase = require('../supabaseClient');
 
+const PROMPT_COLUMNS = 'id, title, prompt_text, category, prompt_date, created_by, is_active, created_at';
+
 /**
  * Fetches today's active prompt.
  * As requested by the ticket: If no prompt exists for today, 
@@ -9,26 +11,13 @@ const getTodayPrompt = async () => {
   // Get today's date formatted as YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0]; 
 
-  // ATTEMPT 1: Try to find a prompt specifically assigned to today
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('prompts')             // Look inside the 'prompts' table
-    .select('*')                 // Select all columns (id, title, etc.)
-    .eq('prompt_date', today)    // Where the prompt_date equals today
-    .single();                   // We only expect exactly 1 result
-
-  // ATTEMPT 2: The Fallback
-  if (error && error.code === 'PGRST116') { 
-    const fallback = await supabase
-      .from('prompts')
-      .select('*')
-      .lte('prompt_date', today)                  
-      .order('prompt_date', { ascending: false }) 
-      .limit(1)                                   
-      .single();
-      
-    data = fallback.data;
-    error = fallback.error;
-  }
+    .select(PROMPT_COLUMNS)
+    .lte('prompt_date', today)
+    .order('prompt_date', { ascending: false })
+    .limit(1)
+    .single();
 
   // ERROR HANDLING
   if (error && error.code !== 'PGRST116') {
@@ -44,7 +33,7 @@ const getTodayPrompt = async () => {
 const getPromptById = async (id) => {
   const { data, error } = await supabase
     .from('prompts')
-    .select('*')
+    .select(PROMPT_COLUMNS)
     .eq('id', id)
     .single();
 
@@ -62,7 +51,7 @@ const getPromptById = async (id) => {
 const getPromptByDate = async (date) => {
   const { data, error } = await supabase
     .from('prompts')
-    .select('*')
+    .select(PROMPT_COLUMNS)
     .eq('prompt_date', date)
     .single();
 
@@ -86,7 +75,7 @@ const getArchivePrompts = async (page = 1, limit = 10) => {
 
   const { data, error } = await supabase
     .from('prompts')
-    .select('*')
+    .select(PROMPT_COLUMNS)
     .order('prompt_date', { ascending: false }) // Sort newest to oldest
     .range(from, to);                           // Apply our pagination math
 

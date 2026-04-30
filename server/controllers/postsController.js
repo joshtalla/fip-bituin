@@ -1,5 +1,35 @@
-const { insertPost } = require('../services/postService');
+const { getPostById, getPostsByPrompt, insertPost } = require('../services/postService');
 const supabase = require('../supabaseClient');
+
+const listPostsByPrompt = async (req, res) => {
+  try {
+    const { promptId } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 18;
+
+    const result = await getPostsByPrompt(promptId, page, limit);
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const getPost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const post = await getPostById(id);
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    return res.status(200).json(post);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
 
 const createPost = async (req, res) => {
   try {
@@ -48,4 +78,4 @@ const createPost = async (req, res) => {
   }
 };
 
-module.exports = { createPost };
+module.exports = { createPost, getPost, listPostsByPrompt };

@@ -1,8 +1,8 @@
 import headerStar from "../assets/header-star.svg";
 import { useEffect, useState } from "react";
-import { mockPosts } from "../mocks/mockData";
 import PostPreview from "./PostPreview";
 import { StarPost, SkeletonStarPost } from "./StarPost";
+import { fetchJson } from "../services/api";
 
 const PAGE_SIZE = 18;
 
@@ -23,19 +23,7 @@ function LoadMoreButton({ loadMore, isLoadingMore }) {
 }
 
 async function fetchPosts(promptId, page) {
-  // TODO: replace with real API call once available.
-
-  // const resp = await fetch(`/api/prompts/${promptId}/posts?page=${page}&limit=${PAGE_SIZE}`);
-  // if (!resp.ok) throw new Error("Failed to fetch posts");
-  // const data = await resp.json();
-  // return data;
-
-  // Development only: return the mock posts
-  // Development only: wait 5 seconds before returning the mock posts
-  const start = (page - 1) * PAGE_SIZE;
-  const end = start + PAGE_SIZE;
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return mockPosts.slice(start, end);
+  return fetchJson(`/api/prompts/${promptId}/posts?page=${page}&limit=${PAGE_SIZE}`);
 }
 
 export default function StarGrid({ promptId }) {
@@ -55,7 +43,7 @@ export default function StarGrid({ promptId }) {
 
     setIsLoadingMore(true);
     try {
-      const newPosts = await fetchPosts(promptId, page + 1);
+      const { posts: newPosts, hasMore: nextHasMore } = await fetchPosts(promptId, page + 1);
 
       if (newPosts.length === 0) {
         setHasMore(false);
@@ -66,7 +54,7 @@ export default function StarGrid({ promptId }) {
       const newPage = page + 1;
 
       setPage(newPage);
-      setHasMore(newPosts.length === PAGE_SIZE);
+      setHasMore(nextHasMore);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
@@ -97,7 +85,7 @@ export default function StarGrid({ promptId }) {
         }
 
         // Fetch the first page of posts
-        const firstPage = await fetchPosts(promptId, 1);
+        const { posts: firstPage, hasMore: firstPageHasMore } = await fetchPosts(promptId, 1);
         if (cancelled) return;
 
         // Set the posts and page state so that the first page of posts is displayed
@@ -110,13 +98,7 @@ export default function StarGrid({ promptId }) {
           return;
         }
 
-        // Fetch the second page of posts
-        const nextPage = await fetchPosts(promptId, 2);
-        if (cancelled) return;
-
-        // Set the has more state based on the length of the second page of posts
-        // so that the load more button only appears if there are more posts to load
-        setHasMore(nextPage.length > 0);
+        setHasMore(firstPageHasMore);
       } catch (error) {
         console.error("Error fetching posts:", error);
       } finally {

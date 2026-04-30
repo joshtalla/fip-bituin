@@ -1,6 +1,6 @@
 import "./Auth.css";
 import bituinLogo from "../assets/bituin-logo.svg";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -22,6 +22,10 @@ const schema = yup.object().shape({
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from
+    ? `${location.state.from.pathname}${location.state.from.search || ""}`
+    : "/prompts";
 
   // react-hook-form setup with Yup validatin
   const {
@@ -38,7 +42,7 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {
       await signIn(data.email, data.password);
-      navigate("/prompts");
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       setError("root", {
         type: "manual",

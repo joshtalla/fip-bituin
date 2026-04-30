@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { CgProfile } from "react-icons/cg";
 import { LuMaximize2 } from "react-icons/lu";
 import { Link } from "react-router-dom";
 
 // Post preview that only appears when the user hovers over a star
 // TODO: change the preview positioning based on the star's column position to the left or right of the star
-export default function PostPreview({ postId, username, content }) {
+function PostPreview({ postId, username, content }) {
   return (
     <div className="absolute bottom-full left-1/2 z-10 mb-1 h-[277px] w-[482px] -translate-x-1/2 rounded-xl bg-[#FBF3E5] p-3 text-white shadow-xl">
       <div className="relative container mx-auto">
@@ -31,3 +32,5 @@ export default function PostPreview({ postId, username, content }) {
     </div>
   );
 }
+
+export default memo(PostPreview);

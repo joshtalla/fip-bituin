@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { AuthContext } from './auth-context';
 import { supabase } from '../services/supabaseClient';
 
 /**
@@ -9,7 +10,6 @@ import { supabase } from '../services/supabaseClient';
  * 
  * Usage: Wrap the <App /> with <AuthProvider>, then use useContext(AuthContext) in any child component.
  */
-export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     // The logged-in user's profile from the database(it is null if the user is not logged/signed in).

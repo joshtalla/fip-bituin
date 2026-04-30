@@ -11,6 +11,13 @@ body,
   padding: 0;
 }
 
+html {
+  min-height: 100vh;
+  background: linear-gradient(to top, #682b1d, #07133b);
+}
+
 body {
+  min-height: 100vh;
+  background: transparent;
   font-family: "Poppins", Arial, Helvetica, sans-serif;
 }
