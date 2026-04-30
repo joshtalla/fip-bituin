@@ -1,0 +1,148 @@
+/* Poppins Font & Darumadrop One Font */
+@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
+
+.prompt-container {
+    color: #4C383A;
+    font-family: 'Darumadrop One', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 10%;
+    text-align: center;
+    height: calc(100vh - 144px);
+    gap: 10px;
+}
+
+.true-container{
+    position: relative;
+    flex-direction: column;
+    width: 70%;
+    padding: 30px;
+    border-radius: 30px;
+    background-color: #FBF3E5;
+    display: flex;
+    gap: 5px;
+}
+
+.exit-button{
+    position: absolute;
+    left: 16%;
+    margin-top: 1%;
+    cursor: pointer;
+}
+
+.exit-button-img{
+    width: 1.5%;
+    height: auto;
+    cursor: pointer;
+}
+
+.content-row{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 30px;
+}
+
+
+.content{
+    font-family: 'Poppins', sans-serif;
+    margin-top: 10px;
+    font-size: 24px;
+    text-align: left;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.content-row-below{
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-top: 3px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 30px;
+}
+
+.translate-button{
+    font-family: 'Darumadrop One', sans-serif;
+    font-size: 24px;
+    background-color: #8C97BC;
+    color: #4C383A;
+
+    display: inline-flex;
+    justify-content: center;
+
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-top: 10px;
+    cursor: pointer;
+    width: 15%;
+}
+
+.comment-button{
+    width: 25px;
+    height: 25px;
+
+    object-fit: contain;
+    cursor: pointer;
+}
+
+.more-actions-button{
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 6px;
+}
+
+.comment-input-container{
+    margin-top: 12px;
+    width: 100%;
+}
+
+.comment-input{
+    width: 100%;
+    min-height: 151px;
+    max-height: 151px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #E8DFCE;
+}
+
+.comment-actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.comment-cancel, .comment-publish{
+    font-family: 'Darumadrop One', sans-serif;
+    font-size: 24px;
+
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 8px;
+    height: 35px;
+    width: 95px;
+    gap: 10px;
+    
+    padding: 12px 20px;
+    cursor: pointer;
+}
+
+.comment-cancel{
+    color: white;
+    background-color: #765C5F;
+}
+
+.comment-publish{
+    color: #4C383A;
+    background-color: #EFB758;
+}
