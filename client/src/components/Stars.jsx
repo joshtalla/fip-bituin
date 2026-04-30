@@ -1,37 +1,56 @@
-import {useEffect, useRef} from 'react';
+import { useEffect, useRef } from 'react';
 
-const Stars = ({ count = 100000 }) => {
-    const canvasRef = useRef(null);
-    useEffect(() =>{
-        const siteBody = canvasRef.current;
-        const ctx = siteBody.getContext('2d');
-        siteBody.width = window.innerWidth;
-        siteBody.height = window.innerHeight;
+const Stars = ({ count = 150 }) => {
+  const canvasRef = useRef(null);
 
-        for (let i = 0; i < count; i++){
-            const xPlane = Math.random() * siteBody.width;
-            const yPlane = Math.random() * siteBody.height;
-            const radius = Math.random() * 0.7; // Star Sizes
-            const opacity = Math.random() * 0.3 + 0.2;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-            ctx.beginPath();
-            ctx.arc(xPlane, yPlane, radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255, ${opacity})`;
-            ctx.fill();
+    const stars = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5 + 0.5,
+      opacity: Math.random(),
+      speed: Math.random() * 0.02 + 0.005,
+      direction: Math.random() > 0.5 ? 1 : -1,
+    }));
+
+    let animationId;
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach((star) => {
+        star.opacity += star.speed * star.direction;
+        if (star.opacity >= 1 || star.opacity <= 0.1) {
+          star.direction *= -1;
         }
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+        ctx.fill();
+      });
+      animationId = requestAnimationFrame(animate);
+    };
 
-    }, []);
-    return(
-        <canvas
-            ref={canvasRef}
-            style={
-                {position: 'fixed',
-                inset: 0,
-                pointerEvents: 'none',
-                zIndex: 0
-            }}
-        />
-    );
+    animate();
+
+    return () => cancelAnimationFrame(animationId);
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
+    />
+  );
 };
 
 export default Stars;
