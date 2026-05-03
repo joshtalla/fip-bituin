@@ -1,0 +1,5 @@
+/* Optional CSS-first theme (Tailwind v4). Use classes like bg-cream, text-gold. */
+@theme {
+  --color-cream: #fbf3e5;
+  --color-gold: #efb758;
+}

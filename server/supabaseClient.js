@@ -6,5 +6,3 @@ const supabase = createClient(
 );
 
 module.exports = supabase;
-
-console.log(process.env.SUPABASE_URL);

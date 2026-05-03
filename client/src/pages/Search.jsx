@@ -1,16 +1,5 @@
-import Navbar from '../components/Navbar'
+import { Navigate } from "react-router-dom";
 
-const Search = () => {
-    return(
-        <>
-        <Navbar />
-            <div>
-                <h2>
-                    Search
-                </h2>
-            </div>
-        </>
-    );
+export default function Search() {
+  return <Navigate to="/prompts?showSearch=1" replace />;
 }
-
-export default Search;

@@ -1,10 +1,15 @@
 const { insertPost } = require('../services/postService');
+const supabase = require('../supabaseClient');
 
 const createPost = async (req, res) => {
   try {
     const { prompt_id, content } = req.body;
 
     
+    if (!prompt_id) {
+      return res.status(400).json({ error: "Prompt ID required" });
+    }
+
     if (!content) {
       return res.status(400).json({ error: "Content required" });
     }
@@ -15,7 +20,10 @@ const createPost = async (req, res) => {
       return res.status(401).json({ error: "No auth token" });
     }
 
-    const token = authHeader.split(" ")[1];
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme !== "Bearer" || !token) {
+      return res.status(401).json({ error: "Invalid authorization format" });
+    }
 
     
     const { data, error } = await supabase.auth.getUser(token);
