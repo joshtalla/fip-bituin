@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const promptRoutes = require('./routes/prompts');
 const postRoutes = require('./routes/posts');
+const reportRoutes = require('./routes/reports');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use(cors({ origin: CLIENT_ORIGIN }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/posts', postRoutes);
+app.use('/api', reportRoutes);
 
 // Routes
 app.get('/', (req, res) => {
