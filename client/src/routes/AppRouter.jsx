@@ -7,6 +7,7 @@ import Explore from '../pages/Explore';
 import Search from '../pages/Search';
 import CreatePost from '../pages/CreatePost';
 import NotFound from '../pages/NotFound';
+import ThreadView from '../pages/ThreadView';
 
 const AppRouter = () => {
   return (
@@ -20,7 +21,7 @@ const AppRouter = () => {
       <Route path="/explore" element={<Explore />} />
       <Route path="/search" element={<Search />} />
       <Route path="/prompts/create" element={<CreatePost />} />
-      <Route path="/prompts/:postId" element={<NotFound />} />
+      <Route path="/prompts/:postId" element={<ThreadView />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
