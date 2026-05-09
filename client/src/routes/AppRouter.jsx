@@ -26,11 +26,11 @@ const AppRouter = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
           <Route path="/profile" element={<Navigate to="/prompts" replace />} />
+          <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />
           <Route path="/explore" element={<Navigate to="/prompts" replace />} />
         </Route>
         <Route path="/prompts/create" element={<CreatePost />} />
       </Route>
-
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
