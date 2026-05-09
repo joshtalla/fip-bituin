@@ -9,9 +9,61 @@ const translate = async (req, res) => {
             return res.status(400).json({ error: 'Text is required' });
         }
 
-        // For minimal version, it uses a hardcoded target = English for the language
-        const target = 'en';
+        const authHeader = req.headers.authorization;
 
+        if (!authHeader) {
+            return res.status(401).json({ error: 'No auth token' });
+        }
+
+        const [scheme, token] = authHeader.split(' ');
+
+        if (scheme !== 'Bearer' || !token) {
+            return res.status(401).json({ error: 'Invalid authorization format' });
+        }
+
+        const { data: userData, error: authError } = await supabase.auth.getUser(token);
+
+        if (authError || !userData || !userData.user) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+
+        const auth_user_id = userData.user.id;
+
+        const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('language')
+            .eq('id', auth_user_id)
+            .single();
+
+        if (profileError || !profile) {
+            return res.status(400).json({ error: 'User profile not found' });
+        }
+
+        const target = profile.language;
+
+        if (!target) {
+            return res.status(400).json({ error: 'User preferred language not set' });
+        }
+
+        // Validate target against provider-supported languages
+        let supported = [];
+
+        try {
+            supported = await translationService.getSupportedLanguages();
+        } catch (err) {
+            console.error('Failed to fetch supported languages', err);
+        }
+
+        const isSupported = supported.some((l) => {
+            // LibreTranslate languages objects often have `code` and `name`.
+            return l.code === target || l.language === target || l.name === target;
+        });
+
+        if (supported.length > 0 && !isSupported) {
+            return res.status(400).json({ error: 'Target language not supported' });
+        }
+
+        // Detect source language if not provided
         let detected = source || null;
 
         try {
@@ -34,6 +86,7 @@ const translate = async (req, res) => {
 
         const data = await translationService.translateText(text, target, source || 'auto');
 
+        // normalize translated text
         const translated_text = data && (data.translatedText || data.translated_text || data.result || data.translation || null);
 
         if (!translated_text) {
