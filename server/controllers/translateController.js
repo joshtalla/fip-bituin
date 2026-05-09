@@ -22,7 +22,7 @@ const translate = async (req, res) => {
         // Check if text is provided in the request
         if (!text) {
             // If not, return a 400 Bad Request error
-            return res.status(400).json({ error: 'Text is required' });
+            return res.status(400).json({ error: 'Text is required for translation' });
         }
 
         // Get the Authorization header from the request
@@ -74,7 +74,7 @@ const translate = async (req, res) => {
         // Check if the preferred language is set
         if (!target) {
             // If not, return a 400 Bad Request error
-            return res.status(400).json({ error: 'User preferred language not set' });
+            return res.status(400).json({ error: 'User preferred language is not set' });
         }
 
         // Validate that the target language is supported by the translation provider
