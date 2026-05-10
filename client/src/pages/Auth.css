@@ -1,26 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
-/* global */
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100%;
+/* Scope auth resets to the auth surface so they do not leak into app routes. */
+.auth-page,
+.auth-page * {
+  box-sizing: border-box;
 }
 
-* {
-  box-sizing: border-box;
+.auth-page * {
   margin: 0;
   padding: 0;
 }
 
-body {
+.auth-page {
+    width: 100%;
+    min-height: 100vh;
   font-family: "Poppins", Arial, Helvetica, sans-serif;
 }
 
-button,
-input {
+.auth-page button,
+.auth-page input {
   font: inherit;
 }
 

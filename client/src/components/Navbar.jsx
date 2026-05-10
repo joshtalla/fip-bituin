@@ -11,6 +11,7 @@ const Navbar = () => {
   const params = new URLSearchParams(search);
   const isPromptBoardSearch =
     pathname === "/prompts" && params.get("showSearch") === "1";
+  const isPromptDetail = /^\/prompt(?:s)?\/[^/]+$/.test(pathname);
 
   const handleSignOut = async () => {
     try {
@@ -25,30 +26,46 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar z-10">
+    <nav className={`navbar z-10 ${isPromptDetail ? "navbar-detail" : ""}`}>
       <div className="navbar-inner">
         <div className="logo">bituin.</div>
         <ul className="nav-links">
-          <li>
-            <NavLink
-              to="/prompts"
-              end
-              className={({ isActive }) =>
-                isActive && !isPromptBoardSearch ? "active" : undefined
-              }
-            >
-              prompts
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/prompts?showSearch=1"
-              className={() => (isPromptBoardSearch ? "active" : undefined)}
-            >
-              search
-            </NavLink>
-          </li>
-          {user && (
+          {isPromptDetail ? (
+            <>
+              <li>
+                <NavLink to="/profile">profile</NavLink>
+              </li>
+              <li>
+                <NavLink to="/explore">explore</NavLink>
+              </li>
+              <li>
+                <NavLink to="/prompts?showSearch=1">search</NavLink>
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                <NavLink
+                  to="/prompts"
+                  end
+                  className={({ isActive }) =>
+                    isActive && !isPromptBoardSearch ? "active" : undefined
+                  }
+                >
+                  prompts
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/prompts?showSearch=1"
+                  className={() => (isPromptBoardSearch ? "active" : undefined)}
+                >
+                  search
+                </NavLink>
+              </li>
+            </>
+          )}
+          {user && !isPromptDetail && (
             <li>
               <button
                 type="button"

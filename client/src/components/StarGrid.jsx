@@ -34,6 +34,23 @@ export default function StarGrid({ promptId }) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getPreviewPlacement = (event) => {
+    const starBounds = event.currentTarget.getBoundingClientRect();
+    const previewWidth = 482;
+    const gutter = 24;
+    const centeredLeft = starBounds.left + starBounds.width / 2 - previewWidth / 2;
+
+    if (centeredLeft < gutter) {
+      return "left";
+    }
+
+    if (centeredLeft + previewWidth > window.innerWidth - gutter) {
+      return "right";
+    }
+
+    return "center";
+  };
+
   // Load more posts when the user scrolls to the bottom of the page
   // Fetches the next page of posts from the API and adds them to the posts state by adding the new posts to the end of the existing posts
   // If the next page of posts is empty, sets the has more state to false
@@ -150,17 +167,24 @@ export default function StarGrid({ promptId }) {
             <div
               key={post.id}
               className="relative"
-              onMouseEnter={() => setHoveredStar(post.id)}
+              onMouseEnter={(event) =>
+                setHoveredStar({
+                  id: post.id,
+                  placement: getPreviewPlacement(event),
+                })
+              }
               onMouseLeave={() => setHoveredStar(null)}
             >
               <StarPost post={post} />
 
               {/* Post preview that only appears when the user hovers over a star */}
-              {hoveredStar === post.id && (
+              {hoveredStar?.id === post.id && (
                 <PostPreview
                   postId={post.id}
                   username={post.anonymous_name}
+                  country={post.country}
                   content={post.content}
+                  placement={hoveredStar.placement}
                 />
               )}
             </div>

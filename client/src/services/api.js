@@ -8,8 +8,8 @@ export const fetchJson = async (path, options = {}) => {
     : await response.text();
 
   if (!response.ok) {
-    const errorMessage = typeof payload === "object" && payload?.error
-      ? payload.error
+    const errorMessage = typeof payload === "object"
+      ? payload?.error || payload?.message || "Request failed"
       : "Request failed";
     const error = new Error(errorMessage);
     error.status = response.status;

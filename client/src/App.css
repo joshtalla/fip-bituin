@@ -44,6 +44,7 @@ body {
   font-size: 1.2rem;
   list-style: none;
   gap: 20px;
+  align-items: center;
 }
 
 .nav-links a {
@@ -78,6 +79,37 @@ body {
 .nav-button:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+.navbar-detail {
+  background-image: linear-gradient(to top, transparent, rgba(0, 0, 0, 0.35));
+}
+
+.navbar-detail .navbar-inner {
+  min-height: 108px;
+}
+
+.navbar-detail .nav-links {
+  gap: 56px;
+}
+
+@media (max-width: 720px) {
+  .navbar-inner {
+    padding: 1rem 24px;
+  }
+
+  .logo {
+    font-size: 2.2rem;
+  }
+
+  .nav-links {
+    gap: 16px;
+    font-size: 1rem;
+  }
+
+  .navbar-detail .nav-links {
+    gap: 20px;
+  }
 }
 
 .prompt-board-page {

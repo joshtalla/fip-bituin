@@ -24,6 +24,7 @@ const AppRouter = () => {
         <Route element={<AppLayout />}>
           <Route path="/prompts" element={<PromptBoard />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/prompt/:postId" element={<PostDetail />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
           <Route path="/profile" element={<Navigate to="/prompts" replace />} />
           <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />

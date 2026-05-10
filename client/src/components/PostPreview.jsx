@@ -1,34 +1,57 @@
 import { memo } from "react";
 import { CgProfile } from "react-icons/cg";
+import { IoLocationOutline } from "react-icons/io5";
 import { LuMaximize2 } from "react-icons/lu";
 import { Link } from "react-router-dom";
 
-// Post preview that only appears when the user hovers over a star
-// TODO: change the preview positioning based on the star's column position to the left or right of the star
-function PostPreview({ postId, username, content }) {
+const placementClasses = {
+  left: "left-0 translate-x-0",
+  center: "left-1/2 -translate-x-1/2",
+  right: "right-0 translate-x-0",
+};
+
+function PostPreview({ postId, username, country, content, placement = "center" }) {
+  const locationLabel = country || "location, country";
+
   return (
-    <div className="absolute bottom-full left-1/2 z-10 mb-1 h-[277px] w-[482px] -translate-x-1/2 rounded-xl bg-[#FBF3E5] p-3 text-white shadow-xl">
-      <div className="relative container mx-auto">
-        {/* Link to the post page */}
-        <Link
-          to={`/prompts/${postId}`}
-          className="absolute top-0 right-0 cursor-pointer"
-        >
-          {/* Maximize icon that leads to the post page */}
-          <LuMaximize2 className="text-[32px] text-black" />
-        </Link>
-        {/* Profile picture and username */}
-        <div className="flex items-center gap-2 pr-10">
-          <CgProfile className="text-[32px] text-black" />
-          <h2 className="mb-4 pt-4 font-poppins text-[20px] font-bold font-semibold text-black">
-            {username}
-          </h2>
+    <div
+      className={`absolute bottom-full z-10 mb-3 hidden h-[277px] w-[482px] overflow-hidden rounded-[20px] border border-[#77D1F6] bg-[#FBF3E5] text-[#4C383A] shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:block ${placementClasses[placement] ?? placementClasses.center}`}
+    >
+      <div className="flex h-full flex-col gap-6 px-8 py-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-6">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4C383A] text-[#FBF3E5]">
+                <CgProfile className="text-[28px]" />
+              </div>
+              <h2 className="m-0 truncate font-poppins text-[22px] font-semibold leading-none text-[#332528]">
+                {username}
+              </h2>
+            </div>
+
+            <div className="flex min-w-0 items-center gap-2 text-[#4C383A]">
+              <IoLocationOutline className="shrink-0 text-[30px]" />
+              <p className="m-0 truncate font-poppins text-[18px] font-medium leading-none text-[#4C383A]">
+                {locationLabel}
+              </p>
+            </div>
+          </div>
+
+          <Link
+            to={`/prompt/${postId}`}
+            aria-label="Open post"
+            className="shrink-0 pt-1 text-[#4C383A] transition-transform duration-200 hover:scale-105"
+          >
+            <LuMaximize2 className="text-[28px]" />
+          </Link>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-hidden pr-1">
+          <p className="m-0 font-poppins text-[15px] font-medium leading-[1.8] text-[#4C383A]">
+            {content}
+          </p>
         </div>
       </div>
-      {/* Post content */}
-      <p className="font-poppins text-sm text-[12px] font-semibold text-[#4C383A]">
-        {content}
-      </p>
     </div>
   );
 }

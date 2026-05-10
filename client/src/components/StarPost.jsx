@@ -20,7 +20,7 @@ export function SkeletonStarPost() {
 function StarPostComponent({ post }) {
   return (
     <div className="relative">
-      <Link to={`/prompts/${post.id}`}>
+      <Link to={`/prompt/${post.id}`}>
         <img
           src={starIcon}
           alt="Open post"
