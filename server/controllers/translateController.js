@@ -1,6 +1,6 @@
+
 const translationService = require('../services/translationService');
 const supabase = require('../supabaseClient');
-
 
 /**
  * Translate endpoint controller
@@ -8,6 +8,7 @@ const supabase = require('../supabaseClient');
  * - Validates input and authentication
  * - Looks up user's preferred language from Supabase
  * - Checks if translation is needed (avoids same-language translation)
+ * - Only allows English and Tagalog to be translated
  * - Calls LibreTranslate API for translation
  * - Returns translated or original text with metadata
  *
@@ -16,136 +17,83 @@ const supabase = require('../supabaseClient');
  */
 const translate = async (req, res) => {
     try {
-        // Extract text to translate and optional source language from request body
         const { text, source } = req.body || {};
+        if (!text) return res.status(400).json({ error: 'Text is required for translation' });
 
-        // Check if text is provided in the request
-        if (!text) {
-            // If not, return a 400 Bad Request error
-            return res.status(400).json({ error: 'Text is required for translation' });
-        }
-
-        // Get the Authorization header from the request
+        // Check that user is authenticated
         const authHeader = req.headers.authorization;
-
-        // Check if the Authorization header is present
-        if (!authHeader) {
-            // If not, return a 401 Unauthorized error
-            return res.status(401).json({ error: 'No auth token' });
-        }
-
-        // Split the Authorization header into scheme and token
+        if (!authHeader) return res.status(401).json({ error: 'No auth token' });
         const [scheme, token] = authHeader.split(' ');
+        if (scheme !== 'Bearer' || !token) return res.status(401).json({ error: 'Invalid authorization format' });
 
-        // Check if the scheme is 'Bearer' and token exists
-        if (scheme !== 'Bearer' || !token) {
-            // If not, return a 401 Unauthorized error
-            return res.status(401).json({ error: 'Invalid authorization format' });
-        }
-
-        // Use Supabase to validate the user's token and get user data
+        // Ensure user is logged into Supabase
         const { data: userData, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !userData || !userData.user) return res.status(401).json({ error: 'Invalid token' });
+        const userId = userData.user.id;
 
-        // Check if user is authenticated and user data is valid
-        if (authError || !userData || !userData.user) {
-            // If not, return a 401 Unauthorized error
-            return res.status(401).json({ error: 'Invalid token' });
-        }
-
-        // Get the authenticated user's ID
-        const auth_user_id = userData.user.id;
-
-        // Query Supabase for the user's profile and preferred language
+        // Look up user's preferred language from Supabase
         const { data: profile, error: profileError } = await supabase
             .from('users')
             .select('language')
-            .eq('id', auth_user_id)
+            .eq('id', userId)
             .single();
-
-        // Check if the user's profile was found and contains a language
-        if (profileError || !profile) {
-            // If not, return a 400 Bad Request error
-            return res.status(400).json({ error: 'User profile not found' });
-        }
-
-        // Get the user's preferred language
+        if (profileError || !profile) return res.status(400).json({ error: 'User profile not found' });
         const target = profile.language;
+        if (!target) return res.status(400).json({ error: 'User preferred language is not set' });
 
-        // Check if the preferred language is set
-        if (!target) {
-            // If not, return a 400 Bad Request error
-            return res.status(400).json({ error: 'User preferred language is not set' });
-        }
-
-        // Restrict supported languages to only English and Tagalog
+        // Only allow English and Tagalog
         const allowedLanguages = ['en', 'tl'];
         if (!allowedLanguages.includes(target)) {
-            return res.status(400).json({ error: 'Only English and Tagalog are supported for translation.' });
+            return res.status(400).json({ error: 'Translation is only available for English and Tagalog. Please set your language to English or Tagalog in your profile.' });
         }
 
-        // Validate that the target language is supported by the translation provider
+        // Check if target language is supported
         let supported = [];
-
         try {
-            // Fetch supported languages from LibreTranslate
             supported = await translationService.getSupportedLanguages();
         } catch (err) {
-            // Log error but continue (may result in later error if unsupported)
             console.error('Failed to fetch supported languages', err);
         }
-
-        // Check if the user's preferred language is in the supported list
-        const isSupported = supported.some((l) => {
-            // LibreTranslate languages objects often have `code` and `name`.
-            return l.code === target || l.language === target || l.name === target;
-        });
-
+        const isSupported = supported.some(l => l.code === target || l.language === target || l.name === target);
         if (supported.length > 0 && !isSupported) {
-            // If not supported, return a 400 Bad Request error
             return res.status(400).json({ error: 'Target language not supported' });
         }
 
-        // Detect the source language if not provided
+        // Detect source language if not provided
         let detected = source || null;
-
         try {
-            // If source language is not provided, use LibreTranslate to detect it
-            if (!detected) {
-                detected = await translationService.detectLanguage(text);
-            }
+            if (!detected) detected = await translationService.detectLanguage(text);
         } catch (err) {
-            // If detection fails, log a warning and continue with 'auto'
             console.warn('Language detection failed, continuing with auto');
         }
-
-        // If the detected source language matches the target, skip translation
+        if (detected && !allowedLanguages.includes(detected)) {
+            return res.status(400).json({ error: 'Only English and Tagalog text can be translated at this time.' });
+        }
         if (detected && detected === target) {
-            // Return the original text and indicate no translation was needed
             return res.json({
                 original_text: text,
                 translated_text: text,
                 source_language: detected,
                 target_language: target,
-                no_op: true
+                no_op: true,
+                message: 'This post is already in your preferred language.'
             });
         }
 
-        // Call the translation service to translate the text
+        // Translate the text(Main functionality)
         const data = await translationService.translateText(text, target, source || 'auto');
-
-        // Normalize the translated text from the provider's response
         const translated_text = data && (data.translatedText || data.translated_text || data.result || data.translation || null);
-
-        // Check if translation was successful
         if (!translated_text) {
-            // If not, return a 502 Bad Gateway error
-            return res.status(502).json({ error: 'Translation provider returned unexpected response' });
+            return res.status(502).json({ error: 'Sorry, something went wrong with the translation service.' });
         }
-
-        // Return the translated text and metadata
-        return res.json({ original_text: text, translated_text, source_language: detected, target_language: target });
+        return res.json({
+            original_text: text,
+            translated_text,
+            source_language: detected,
+            target_language: target,
+            message: 'Translation successful.'
+        });
     } catch (err) {
-        // Catch any unexpected errors and return a 500 Internal Server Error
         console.error(err);
         return res.status(500).json({ error: 'Server error' });
     }
