@@ -4,17 +4,6 @@ import { AuthContext } from "../context/auth-context";
 import { signOut } from "../services/authService";
 
 const Navbar = () => {
-    return (
-        <nav className="navbar">
-            <div className="logo">bituin.</div>
-            <ul className="nav-links">
-                <li><NavLink to="/profile" end>profile</NavLink></li>
-                <li><NavLink to="/explore" end>explore</NavLink></li>
-                <li><NavLink to="/search" end>search</NavLink></li>
-            </ul>
-        </nav>
-    )
-}
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
