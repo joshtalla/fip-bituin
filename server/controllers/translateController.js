@@ -77,6 +77,12 @@ const translate = async (req, res) => {
             return res.status(400).json({ error: 'User preferred language is not set' });
         }
 
+        // Restrict supported languages to only English and Tagalog
+        const allowedLanguages = ['en', 'tl'];
+        if (!allowedLanguages.includes(target)) {
+            return res.status(400).json({ error: 'Only English and Tagalog are supported for translation.' });
+        }
+
         // Validate that the target language is supported by the translation provider
         let supported = [];
 
