@@ -170,19 +170,22 @@ exports.checkPostExists = async (postId) => {
 exports.getUserProfile = async (authUserId) => {
     const { data, error } = await supabase
         .from('users')
-        .select('anonymous_name, language')
-        .eq('id', authUserId)
+        .select('username, language')
+        .eq('auth_user_id', authUserId)
         .single();
 
     if (error) {
         throw error;
     }
 
-    if (!data?.anonymous_name || !data?.language) {
+    if (!data?.username || !data?.language) {
         throw new Error('User profile not found');
     }
 
-    return data;
+    return {
+        anonymous_name: data.username,
+        language: data.language
+    };
 };
 
 function containsEmailOrPhone(text) {
