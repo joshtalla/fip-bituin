@@ -2,20 +2,24 @@
 const translationService = require('../services/translationService');
 const supabase = require('../supabaseClient');
 
-/**
- * Translate endpoint controller
- * Handles translation requests for authenticated users.
- * - Validates input and authentication
- * - Looks up user's preferred language from Supabase
- * - Checks if translation is needed (avoids same-language translation)
- * - Only allows English and Tagalog to be translated
- * - Calls LibreTranslate API for translation
- * - Returns translated or original text with metadata
- *
- * @param {Request} req Express request object
- * @param {Response} res Express response object
- */
+
 const translate = async (req, res) => {
+    /**
+     * Translate endpoint controller
+     * Handles translation requests for authenticated users.
+     * - Validates input and authentication
+     * - Looks up user's preferred language from Supabase
+     * - Checks if translation is needed (avoids same-language translation)
+     * - Only allows English and Tagalog to be translated
+     * - Calls LibreTranslate API for translation
+     * - Returns translated or original text with metadata
+     *
+     * @param {Request} req Express request object
+     * @param {Response} res Express response object
+     * 
+     * @returns {Promise<Response>} JSON response with translation result or error message
+     */
+
     try {
         const { text, source } = req.body || {};
         if (!text) return res.status(400).json({ error: 'Text is required for translation' });
@@ -47,7 +51,7 @@ const translate = async (req, res) => {
             return res.status(400).json({ error: 'Translation is only available for English and Tagalog. Please set your language to English or Tagalog in your profile.' });
         }
 
-        // Check if target language is supported
+        // Check if target language is supported by using getSupportedLanguages() from translationService
         let supported = [];
         try {
             supported = await translationService.getSupportedLanguages();
@@ -59,7 +63,7 @@ const translate = async (req, res) => {
             return res.status(400).json({ error: 'Target language not supported' });
         }
 
-        // Detect source language if not provided
+        // Detect source language if not provided by using dectLanguage() from translationService
         let detected = source || null;
         try {
             if (!detected) detected = await translationService.detectLanguage(text);
@@ -80,7 +84,7 @@ const translate = async (req, res) => {
             });
         }
 
-        // Translate the text(Main functionality)
+        // Translate the text(Main functionality) by calling the translationText() from translationService
         const data = await translationService.translateText(text, target, source || 'auto');
         const translated_text = data && (data.translatedText || data.translated_text || data.result || data.translation || null);
         if (!translated_text) {

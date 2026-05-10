@@ -1,6 +1,7 @@
 const LIBRE_URL = process.env.LIBRETRANSLATE_URL || 'https://libretranslate.com';
 const API_KEY = process.env.LIBRETRANSLATE_API_KEY || '';
 
+
 async function fetchJson(url, opts = {}) {
     /**
      * Performs an HTTP request to the given URL with the provided options,
@@ -15,7 +16,6 @@ async function fetchJson(url, opts = {}) {
 
       const res = await fetch(url, opts);
       if (!res.ok) {
-          // If the response is not successful, throw an error with status code, status text, and error text
           const errorText = await res.text();
           throw new Error(`Fetch failed: ${res.status} ${res.statusText} - ${errorText}`);
       }
