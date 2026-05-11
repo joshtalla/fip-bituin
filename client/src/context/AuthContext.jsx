@@ -3,6 +3,17 @@ import { AuthContext } from './auth-context';
 import { ensureUserProfile } from '../services/authService';
 import { supabase } from '../services/supabaseClient';
 
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 10000;
+
+const withTimeout = async (promise, timeoutMs, label) => Promise.race([
+    promise,
+    new Promise((_, reject) => {
+        window.setTimeout(() => {
+            reject(new Error(`${label} timed out`));
+        }, timeoutMs);
+    }),
+]);
+
 /**
  * AuthContext
  * 
@@ -23,38 +34,92 @@ export const AuthProvider = ({ children }) => {
     // On page load, check if the user is already logged in.
     // Then listen for any login/logout changes while the page is open.
     useEffect(() => {
+        let cancelled = false;
+
+        const clearAuthState = () => {
+            if (cancelled) {
+                return;
+            }
+
+            setUser(null);
+            setLoading(false);
+        };
+
         // Check if there's a saved login from a previous session.
         const getInitialSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
+            try {
+                const {
+                    data: { session },
+                    error,
+                } = await withTimeout(
+                    supabase.auth.getSession(),
+                    AUTH_BOOTSTRAP_TIMEOUT_MS,
+                    'Auth session restore',
+                );
 
-            if (session) {
-                // User is logged in, fetch their profile from the database.
-                await fetchProfile(session.user);
-            } else {
+                if (error) {
+                    throw error;
+                }
+
+                if (session) {
+                    // User is logged in, fetch their profile from the database.
+                    await withTimeout(
+                        fetchProfile(session.user),
+                        AUTH_BOOTSTRAP_TIMEOUT_MS,
+                        'User profile restore',
+                    );
+                    return;
+                }
+
                 // No saved login. Stop loading and show the login screen.
-                setLoading(false);
+                clearAuthState();
+            } catch (error) {
+                // A stale or corrupted persisted session should not block the app forever.
+                console.error("Error restoring auth session:", error.message);
+                clearAuthState();
+
+                try {
+                    await supabase.auth.signOut({ scope: "local" });
+                } catch (signOutError) {
+                    console.error("Error clearing local auth session:", signOutError.message);
+                }
             }
         };
 
         getInitialSession();
 
         // Watch/listen for login/logout events (even if they happen in another browser tab).
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const handleAuthSession = async (session) => {
+            try {
+                if (session) {
+                    await fetchProfile(session.user);
+                    return;
+                }
+
+                clearAuthState();
+            } catch (error) {
+                console.error("Error handling auth state change:", error.message);
+                clearAuthState();
+            }
+        };
+
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
             // Examples: 'SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED'
             console.log("Auth Event:", event);
 
-            if (session) {
-                // User logged in, fetch their profile.
-                await fetchProfile(session.user);
-            } else {
-                // User logged out, clear the profile.
-                setUser(null);
-                setLoading(false);
+            if (event === 'INITIAL_SESSION') {
+                return;
             }
+
+            // Avoid awaiting Supabase work inside the auth callback itself.
+            window.setTimeout(() => {
+                void handleAuthSession(session);
+            }, 0);
         });
 
         // Stop watching for changes when the page closes.
         return () => {
+            cancelled = true;
             authListener.subscription.unsubscribe();
         };
     }, []);
