@@ -10,12 +10,27 @@ const placementClasses = {
   right: "right-0 translate-x-0",
 };
 
-function PostPreview({ postId, username, country, content, placement = "center" }) {
+/** "above" = preview opens upward from the star; "below" = preview sits under the star */
+const verticalClasses = {
+  above: "bottom-full mb-3",
+  below: "top-full mt-3",
+};
+
+function PostPreview({
+  postId,
+  username,
+  country,
+  content,
+  placement = "center",
+  verticalAlign = "above",
+}) {
   const locationLabel = country || "location, country";
+  const vertical =
+    verticalClasses[verticalAlign] ?? verticalClasses.above;
 
   return (
     <div
-      className={`absolute bottom-full z-10 mb-3 hidden h-[277px] w-[482px] overflow-hidden rounded-[20px] border border-[#77D1F6] bg-[#FBF3E5] text-[#4C383A] shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:block ${placementClasses[placement] ?? placementClasses.center}`}
+      className={`absolute ${vertical} z-10 hidden h-[277px] w-[482px] overflow-hidden rounded-[20px] border border-[#77D1F6] bg-[#FBF3E5] text-[#4C383A] shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:block ${placementClasses[placement] ?? placementClasses.center}`}
     >
       <div className="flex h-full flex-col gap-6 px-8 py-7">
         <div className="flex items-start justify-between gap-4">
