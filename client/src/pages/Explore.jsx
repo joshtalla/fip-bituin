@@ -1,16 +1,11 @@
-import Navbar from '../components/Navbar'
+import ExploreFeed from "../components/ExploreFeed";
 
 const Explore = () => {
-    return(
-        <>
-        <Navbar />
-            <div>
-                <h2>
-                    Explore
-                </h2>
-            </div>
-        </>
-    );
-}
+  return (
+    <div className="min-h-screen w-full overflow-hidden px-[60px] pt-[56px] pb-[72px]">
+      <ExploreFeed />
+    </div>
+  );
+};
 
 export default Explore;
