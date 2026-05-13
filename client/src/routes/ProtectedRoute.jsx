@@ -1,25 +1,30 @@
 import { useContext } from "react";
-import { Navigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { AuthContext } from "../context/auth-context";
 
-const ProtectedRoute = ({ children }) => {
+export default function ProtectedRoute({ requireAuth = true, redirectTo, children }) {
+	const { user, loading } = useContext(AuthContext);
+	const location = useLocation();
+
     // 🚧 DEV MODE BYPASS 🚧
-    // Temporarily ignore authentication so we can test the UI!
-    return children;
+    // Uncomment the line below to temporarily ignore authentication so you can test the UI!
+    // return children || <Outlet />;
 
-    /* --- COMMENTED OUT REAL AUTH LOGIC FOR NOW ---
-    const { user, loading } = useContext(AuthContext);
+	if (loading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center text-center font-poppins text-xl text-[#FFFCEF]">
+				Loading...
+			</div>
+		);
+	}
 
-    if (loading) {
-        return null;
-    }
+	if (requireAuth && !user) {
+		return <Navigate to={redirectTo || "/login"} replace state={{ from: location }} />;
+	}
 
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
+	if (!requireAuth && user) {
+		return <Navigate to={redirectTo || "/prompts"} replace />;
+	}
 
-    return children;
-    --------------------------------------------- */
-};
-
-export default ProtectedRoute;
+	return children || <Outlet />;
+}
