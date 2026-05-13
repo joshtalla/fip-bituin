@@ -38,7 +38,7 @@
     border-bottom: 2px solid;
 }
 
-button{
+.container button{
     border-color: #4C383A;
 }
 
@@ -57,13 +57,13 @@ button{
     margin: 0;
 }
 
-img{
+.container img{
     max-width: 10%;
     height: auto;
     vertical-align: middle;
 }
 
-p{
+.container p{
     font-family: 'Poppins', sans-serif;
 }
 

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
+import { fetchJson } from '../services/api'
 
 function CreatePostForm({ promptId, promptText }) {
   const navigate = useNavigate()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
   const MAX = 1000
 
   const handlePublish = async () => {
@@ -20,7 +20,7 @@ function CreatePostForm({ promptId, promptText }) {
       const accessToken = session?.access_token
       if (!accessToken) throw new Error('Not authenticated')
 
-      const response = await fetch(`${apiBaseUrl}/api/posts`, {
+      const data = await fetchJson('/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,15 +31,15 @@ function CreatePostForm({ promptId, promptText }) {
           content: content,
         })
       })
-      if (!response.ok) throw new Error('Failed to publish')
-      const data = await response.json()
       navigate(`/prompts/${data.id}`)
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (publishError) {
+      setError(publishError.message || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
+
+  const publishDisabled = !promptId || content.length === 0 || content.length > MAX || loading
 
   return (
     <div style={{
@@ -55,11 +55,6 @@ function CreatePostForm({ promptId, promptText }) {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '24px 60px',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
       }}>
         <span style={{ color: '#E8A020', fontSize: '64px', fontFamily: 'Darumadrop One', fontWeight: '400' }}>bituin.</span>
         <div style={{ display: 'flex', gap: '32px', color: 'white', fontSize: '24px', fontFamily: 'Poppins', fontWeight: '500' }}>
@@ -75,7 +70,7 @@ function CreatePostForm({ promptId, promptText }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '176px 60px 72px 60px',
+        padding: '32px 60px 72px 60px',
       }}>
 
         {/* Card */}
@@ -117,7 +112,7 @@ function CreatePostForm({ promptId, promptText }) {
             margin: 0,
             lineHeight: '1.5',
           }}>
-            {promptText}
+            {promptText || 'Choose a prompt from the board before creating a post.'}
           </p>
 
           {/* Textarea container */}
@@ -166,6 +161,12 @@ function CreatePostForm({ promptId, promptText }) {
             {content.length} / {MAX}
           </div>
 
+          {!promptId && (
+            <p style={{ color: '#8A3B2E', margin: 0 }}>
+              Open this page from today&apos;s prompt to attach your post correctly.
+            </p>
+          )}
+
           {/* Translate button — below textarea, left aligned */}
           <div>
             <button
@@ -198,9 +199,9 @@ function CreatePostForm({ promptId, promptText }) {
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
             <button
             onClick={handlePublish}
-              disabled={content.length === 0 || content.length > MAX || loading}
+              disabled={publishDisabled}
               style={{
-                background: content.length === 0 || content.length > MAX || loading ? '#ccc' : '#E8A020',
+                background: publishDisabled ? '#ccc' : '#E8A020',
                 color: 'white',
                 border: 'none',
                 borderRadius: '12px',
@@ -208,7 +209,7 @@ function CreatePostForm({ promptId, promptText }) {
                 fontFamily: 'Darumadrop One',
                 fontSize: '24px',
                 fontWeight: '400',
-                cursor: content.length === 0 || content.length > MAX || loading ? 'not-allowed' : 'pointer',
+                cursor: publishDisabled ? 'not-allowed' : 'pointer',
 
               }}
             >
