@@ -11,7 +11,6 @@ import Explore from '../pages/Explore';
 import MyPosts from '../pages/MyPosts';
 import ChangePassword from '../pages/ChangePassword';
 import ChangeEmail from '../pages/ChangeEmail';
-import Explore from '../pages/Explore';
 import SavedPosts from '../pages/SavedPosts';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
