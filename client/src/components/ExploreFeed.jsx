@@ -5,12 +5,12 @@ import { StarPost, SkeletonStarPost } from "./StarPost";
 import { fetchJson } from "../services/api";
 import { IoCloseOutline } from "react-icons/io5";
 
+// Constants for pagination
 const PROMPTS_PAGE_SIZE = 3;
-// const PROMPT_PAGE_HEIGHT =
-//   PROMPTS_PAGE_SIZE * 190 + (PROMPTS_PAGE_SIZE - 1) * 24;
 const DESKTOP_POSTS_PAGE_SIZE = 12;
 const MOBILE_POSTS_PAGE_SIZE = 9;
 
+// Function to get the number of posts to display based on screen size
 function getPostsPageSize() {
   if (typeof window === "undefined") return DESKTOP_POSTS_PAGE_SIZE;
 
@@ -19,6 +19,7 @@ function getPostsPageSize() {
     : DESKTOP_POSTS_PAGE_SIZE;
 }
 
+// Function to fetch the archived prompts
 async function fetchArchivedPrompts(page = 1) {
   const params = new URLSearchParams({
     page: String(page),
@@ -28,6 +29,7 @@ async function fetchArchivedPrompts(page = 1) {
   return fetchJson(`/api/prompts/archive?${params}`);
 }
 
+// Function to fetch the prompt board
 async function fetchPromptBoard(
   promptId,
   page = 1,
@@ -42,6 +44,7 @@ async function fetchPromptBoard(
   return fetchJson(`/api/prompts/${promptId}/board?${params}`);
 }
 
+// Function to display the loading animation
 function LoadingAnimation() {
   return (
     <div className="fixed inset-0 flex items-center justify-center">
@@ -50,6 +53,7 @@ function LoadingAnimation() {
   );
 }
 
+// Component to display the pagination
 function Pagination({ page, totalPages, loading, onPrevious, onNext }) {
   return (
     <nav className="flex items-center justify-center gap-4">
@@ -78,6 +82,7 @@ function Pagination({ page, totalPages, loading, onPrevious, onNext }) {
   );
 }
 
+// Function to get the preview placement
 function getPreviewPlacement(event) {
   const starBounds = event.currentTarget.getBoundingClientRect();
   const previewWidth = 482;
@@ -96,6 +101,7 @@ function getPreviewPlacement(event) {
   return "center";
 }
 
+// Component to display the explore posts
 function ExplorePosts({
   loadingPosts,
   postsError,
@@ -124,6 +130,8 @@ function ExplorePosts({
         </p>
       ) : (
         <div className="grid h-full grid-cols-3 content-start justify-items-center gap-x-10 gap-y-20 sm:gap-x-16 sm:gap-y-24 lg:gap-x-0">
+          {/* Display the posts and set the hover state for the post preview */}
+          {/* Check if the post is the first row of the grid and set the vertical alignment accordingly */}
           {posts.map((post, index) => {
             const columns = 3;
             const isFirstRow = index < columns;
@@ -160,6 +168,7 @@ function ExplorePosts({
   );
 }
 
+// Component to display the star board
 function StarBoard({
   loadingPosts,
   postsError,
@@ -200,7 +209,9 @@ function StarBoard({
   );
 }
 
+// Component to display the mobile star board modal
 function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
+  // Use effect to prevent scrolling when the modal is open
   useEffect(() => {
     if (!open) return;
 
@@ -212,6 +223,7 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
     };
   }, [open]);
 
+  // If the modal is not open, return null
   if (!open) return null;
 
   return (
@@ -244,6 +256,7 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
           </button>
         </div>
 
+        {/* Modal content */}
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           {children}
         </div>
@@ -253,6 +266,7 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
 }
 
 export default function ExploreFeed() {
+  // State variables for fetching the archived prompts
   const [archivedPrompts, setArchivedPrompts] = useState([]);
   const [loadingArchive, setLoadingArchive] = useState(true);
   const [loadingArchivePage, setLoadingArchivePage] = useState(false);
@@ -260,22 +274,29 @@ export default function ExploreFeed() {
   const [archivePageError, setArchivePageError] = useState(null);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
 
+  // State variables for the archive pagination
   const [archivePage, setArchivePage] = useState(1);
   const [totalArchivePages, setTotalArchivePages] = useState(1);
 
+  // State variables for fetching the posts
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
   const [hoveredStar, setHoveredStar] = useState(null);
 
+  // State variables for the post pagination
   const [postsPage, setPostsPage] = useState(1);
   const [totalPostPages, setTotalPostPages] = useState(1);
   const [postsPageSize, setPostsPageSize] = useState(DESKTOP_POSTS_PAGE_SIZE);
 
+  // State variable for the mobile star board modal
   const [isMobileBoardOpen, setIsMobileBoardOpen] = useState(false);
 
   const archiveLoadSeq = useRef(0);
 
+  // Function to load the posts page
+  // Fetches the posts page for the selected prompt
+  // Dynamically sets the posts page size based on the screen size
   const loadPostsPage = async (
     prompt,
     page = 1,
@@ -312,6 +333,9 @@ export default function ExploreFeed() {
   };
 
   const handlePromptClick = async (prompt) => {
+    // Reset the archive page error, selected prompt, posts, posts page, total posts pages, posts error, and hovered star
+    // If the window is less than 1024px, open the mobile star board modal
+    // Load the posts page for the selected prompt
     setArchivePageError(null);
     setSelectedPrompt(prompt);
     setPosts([]);
@@ -328,6 +352,9 @@ export default function ExploreFeed() {
   };
 
   const handleNextPostsPage = () => {
+    // If the selected prompt is not set, return
+    // If the posts page is greater than or equal to the total posts pages, return
+    // Load the next posts page for the selected prompt
     if (!selectedPrompt) return;
     if (postsPage >= totalPostPages) return;
 
@@ -335,12 +362,18 @@ export default function ExploreFeed() {
   };
 
   const handlePreviousPostsPage = () => {
+    // If the selected prompt is not set, return
+    // If the posts page is less than or equal to 1, return
+    // Load the previous posts page for the selected prompt
     if (!selectedPrompt) return;
     if (postsPage <= 1) return;
 
     loadPostsPage(selectedPrompt, postsPage - 1);
   };
 
+  // Function to load the archive page
+  // Fetches the archive page for the every time the archive page is loaded
+  // Differentiates between the initial load and subsequent loads
   const loadArchivePage = async (page, { initial = false } = {}) => {
     const seq = ++archiveLoadSeq.current;
 
@@ -353,6 +386,7 @@ export default function ExploreFeed() {
     setArchivePageError(null);
 
     try {
+      // Try to fetch the archived prompts
       const data = await fetchArchivedPrompts(page);
       if (seq !== archiveLoadSeq.current) return;
 
@@ -361,15 +395,19 @@ export default function ExploreFeed() {
       const total = data.total ?? 0;
       const resolvedPage = data.page ?? page;
 
+      // Set the archived prompts, archive page, and total archive pages
       setArchivedPrompts(prompts);
       setArchivePage(resolvedPage);
       setTotalArchivePages(Math.max(1, Math.ceil((total || 0) / limit)));
 
+      // Set the selected prompt, hovered star, and mobile star board modal
       const firstPrompt = prompts[0] ?? null;
       setSelectedPrompt(firstPrompt);
       setHoveredStar(null);
       setIsMobileBoardOpen(false);
 
+      // If the first prompt is set, load the posts page for the first prompt
+      // Otherwise, reset the posts, posts page, total posts pages, and posts error
       if (firstPrompt) {
         await loadPostsPage(firstPrompt, 1, {
           shouldApply: () => seq === archiveLoadSeq.current,
@@ -392,6 +430,8 @@ export default function ExploreFeed() {
       }
     } finally {
       if (seq === archiveLoadSeq.current) {
+        // If the initial is true, set the loading archive to false
+        // Otherwise, set the loading archive page to false
         if (initial) {
           setLoadingArchive(false);
         } else {
@@ -402,23 +442,30 @@ export default function ExploreFeed() {
   };
 
   const handleNextArchivePage = () => {
+    // If the archive page is greater than or equal to the total archive pages, return
+    // Load the next archive page
     if (archivePage >= totalArchivePages) return;
     loadArchivePage(archivePage + 1);
   };
 
   const handlePreviousArchivePage = () => {
+    // If the archive page is less than or equal to 1, return
+    // Load the previous archive page
     if (archivePage <= 1) return;
     loadArchivePage(archivePage - 1);
   };
 
+  // Load the first archive page, set the initial to true, so loading animation is shown
   useEffect(() => {
     loadArchivePage(1, { initial: true });
   }, []);
 
+  // If loading the initial archive is true, return the loading animation
   if (loadingArchive) {
     return <LoadingAnimation />;
   }
 
+  // If there is an error, return the error message
   if (error) {
     return (
       <p className="font-poppins text-red-700" role="alert">
@@ -427,6 +474,7 @@ export default function ExploreFeed() {
     );
   }
 
+  // If the archived prompts are empty, return the no archived prompts message
   if (archivedPrompts.length === 0) {
     return (
       <p className="font-poppins text-[#4C383A]">No archived prompts yet.</p>
@@ -446,6 +494,7 @@ export default function ExploreFeed() {
         {/* Desktop-only empty right column keeps the grid structure aligned */}
         <div className="hidden lg:block" aria-hidden="true" />
 
+        {/* Archived prompts section */}
         <div className="flex h-full min-h-0 w-full flex-col items-center max-lg:min-h-[calc(100dvh-20rem)]">
           <div className="flex h-[540px] w-full max-w-[651px] flex-col gap-6 sm:h-[618px]">
             {archivedPrompts.map((prompt) => (
@@ -464,8 +513,10 @@ export default function ExploreFeed() {
             ))}
           </div>
 
+          {/* Desktop-only: Empty column to keep the grid structure aligned */}
           <div className="min-h-0 flex-1 basis-0" aria-hidden="true" />
 
+          {/* Archive pagination */}
           <div className="flex w-full max-w-[651px] shrink-0 flex-col gap-2">
             {archivePageError && (
               <p className="font-poppins text-red-400" role="alert">
@@ -487,7 +538,7 @@ export default function ExploreFeed() {
           </div>
         </div>
 
-        {/* Desktop-only right column star board */}
+        {/* Desktop-only: Right column star board */}
         <div className="hidden w-full flex-col lg:flex">
           <StarBoard
             loadingPosts={loadingPosts}
@@ -504,7 +555,7 @@ export default function ExploreFeed() {
         </div>
       </div>
 
-      {/* Mobile-only modal card star board */}
+      {/* Mobile-only: Modal card star board */}
       <MobileStarBoardModal
         open={isMobileBoardOpen}
         onClose={() => setIsMobileBoardOpen(false)}
