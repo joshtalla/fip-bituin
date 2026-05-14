@@ -1,8 +1,32 @@
 const supabase = require('../supabaseClient');
 
-const POST_LIST_COLUMNS = 'id, prompt_id, anonymous_name, content, likes_count, reply_count, created_at';
-const POST_DETAIL_COLUMNS = 'id, prompt_id, user_id, anonymous_name, content, category, language, country, is_flagged, likes_count, reply_count, created_at, updated_at';
+const POST_LIST_COLUMNS = 'id, prompt_id, anonymous_name, content, media_url, media_type, media_width, media_height, likes_count, reply_count, created_at';
+const POST_DETAIL_COLUMNS = 'id, prompt_id, user_id, anonymous_name, content, category, language, country, media_url, media_type, media_width, media_height, is_flagged, likes_count, reply_count, created_at, updated_at';
 const PROMPT_DETAIL_COLUMNS = 'id, title, prompt_text, category, prompt_date';
+const FILIPINO_AMERICAN_PREFIXES = [
+  'Manila',
+  'Mabuhay',
+  'Harana',
+  'Sampaguita',
+  'Jeepney',
+  'Bituin',
+  'Tagpuan',
+  'Barkada',
+  'HaloHalo',
+  'Kundiman',
+];
+const FILIPINO_AMERICAN_SUFFIXES = [
+  'Dreamer',
+  'Voyager',
+  'Storyteller',
+  'Sunrise',
+  'Bridge',
+  'Rhythm',
+  'Lantern',
+  'Skylark',
+  'Trail',
+  'Wave',
+];
 
 const containsLikelyEmail = (text = '') =>
   text.split(/\s+/).some((token) => {
@@ -10,6 +34,154 @@ const containsLikelyEmail = (text = '') =>
     const dot = token.lastIndexOf('.');
     return at > 0 && dot > at + 1 && dot < token.length - 1;
   });
+
+const pickRandom = (values) => values[Math.floor(Math.random() * values.length)];
+
+const buildUsername = (username) => {
+  if (username?.trim()) {
+    return username.trim();
+  }
+
+  const prefix = pickRandom(FILIPINO_AMERICAN_PREFIXES);
+  const suffix = pickRandom(FILIPINO_AMERICAN_SUFFIXES);
+  return `${prefix}${suffix}${Math.floor(1000 + Math.random() * 9000)}`;
+};
+
+const createHttpError = (status, message) => {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+};
+
+const normalizeMediaPayload = ({ media_url, media_type, media_width, media_height } = {}) => {
+  const hasAnyMediaField = [media_url, media_type, media_width, media_height].some(
+    (value) => value !== undefined && value !== null && value !== '',
+  );
+
+  if (!hasAnyMediaField) {
+    return {
+      media_url: null,
+      media_type: null,
+      media_width: null,
+      media_height: null,
+    };
+  }
+
+  if (!media_url || typeof media_url !== 'string') {
+    throw createHttpError(400, 'Media URL is required when attaching media');
+  }
+
+  if (!['image', 'gif'].includes(media_type)) {
+    throw createHttpError(400, 'Media type must be image or gif');
+  }
+
+  const width = Number(media_width);
+  const height = Number(media_height);
+
+  if (!Number.isInteger(width) || width <= 0 || !Number.isInteger(height) || height <= 0) {
+    throw createHttpError(400, 'Media width and height must be positive integers');
+  }
+
+  return {
+    media_url,
+    media_type,
+    media_width: width,
+    media_height: height,
+  };
+};
+
+const resolveUserProfile = async (authUser) => {
+  const authUserId = authUser?.id;
+
+  if (!authUserId) {
+    throw new Error('Authenticated user is required');
+  }
+
+  const { data: existingUser, error: existingUserError } = await supabase
+    .from('users')
+    .select('id, username, language')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+
+  if (existingUserError) {
+    throw existingUserError;
+  }
+
+  const username = buildUsername(authUser.user_metadata?.username);
+  const language = existingUser?.language ?? authUser.user_metadata?.language ?? null;
+
+  if (existingUser?.id) {
+    if (existingUser.username && existingUser.language === language) {
+      return existingUser;
+    }
+
+    const updates = {};
+
+    if (!existingUser.username) {
+      updates.username = username;
+    }
+
+    if (!existingUser.language && language) {
+      updates.language = language;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return existingUser;
+    }
+
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', existingUser.id)
+      .select('id, username, language')
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return updatedUser;
+  }
+
+  const { data: createdUser, error: createError } = await supabase
+    .from('users')
+    .insert({
+      auth_user_id: authUserId,
+      username,
+      country: authUser.user_metadata?.country || null,
+      language,
+    })
+    .select('id, username, language')
+    .single();
+
+  if (createError) {
+    throw createError;
+  }
+
+  return createdUser;
+};
+
+const resolvePromptCategory = async (promptId) => {
+  const { data: prompt, error } = await supabase
+    .from('prompts')
+    .select('category')
+    .eq('id', promptId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!prompt) {
+    throw createHttpError(404, 'Prompt not found');
+  }
+
+  if (!prompt.category) {
+    throw createHttpError(400, 'Prompt category not found');
+  }
+
+  return prompt.category;
+};
 
 const getPostsByPrompt = async (promptId, page = 1, limit = 18) => {
   const from = (page - 1) * limit;
@@ -63,28 +235,31 @@ const getPostById = async (postId) => {
   };
 };
 
-const insertPost = async ({ prompt_id, content, auth_user_id }) => {
+const insertPost = async ({ prompt_id, content, authUser, media }) => {
+  const [user, category] = await Promise.all([
+    resolveUserProfile(authUser),
+    resolvePromptCategory(prompt_id),
+  ]);
+  const normalizedContent = typeof content === 'string' ? content.trim() : '';
+  const mediaPayload = normalizeMediaPayload(media);
 
-  // get user profile
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('id, username')
-    .eq('auth_user_id', auth_user_id)
-    .single();
-  if (userError || !user?.username) {
-    throw new Error('User profile not found');
+  if (!normalizedContent && !mediaPayload.media_url) {
+    throw createHttpError(400, 'Post content or media is required');
   }
 
-  const containsEmail = containsLikelyEmail(content);
+  const containsEmail = containsLikelyEmail(normalizedContent);
 
   const { data, error } = await supabase
     .from('posts')
     .insert({
       prompt_id,
       user_id: user.id,
-      content,
+      content: normalizedContent,
+      category,
+      language: user.language,
       anonymous_name: user.username,
-      is_flagged: containsEmail
+      is_flagged: containsEmail,
+      ...mediaPayload,
     })
     .select()
     .single();
@@ -94,4 +269,4 @@ const insertPost = async ({ prompt_id, content, auth_user_id }) => {
   return data;
 };
 
-module.exports = { getPostsByPrompt, getPostById, insertPost };
+module.exports = { getPostsByPrompt, getPostById, insertPost, normalizeMediaPayload };

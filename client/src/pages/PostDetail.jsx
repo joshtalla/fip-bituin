@@ -12,6 +12,8 @@ import { AuthContext } from "../context/auth-context";
 import ReplyInput from "../components/ReplyInput";
 import ReplyThread from "../components/ReplyThread";
 import { fetchJson, translatePost } from "../services/api";
+import MediaAttachment from "../components/MediaAttachment";
+import { uploadMedia } from "../services/mediaService";
 import { supabase } from "../services/supabaseClient";
 
 const REPLY_PAGE_SIZE = 100;
@@ -96,7 +98,7 @@ export default function PostDetail() {
     };
   }, [postId]);
 
-  const handleReplySubmit = async (parentReplyId, content) => {
+  const handleReplySubmit = async (parentReplyId, payload) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -109,13 +111,20 @@ export default function PostDetail() {
       ? `/api/replies/${parentReplyId}/replies`
       : `/api/posts/${postId}/replies`;
 
+    const mediaPayload = payload.media
+      ? await uploadMedia({ media: payload.media, authUserId: session.user.id })
+      : {};
+
     const createdReply = await fetchJson(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({
+        content: payload.content,
+        ...mediaPayload,
+      }),
     });
 
     setReplies((currentReplies) => [...currentReplies, createdReply]);
@@ -172,11 +181,22 @@ export default function PostDetail() {
               </span>
             </div>
 
-            <div className="mt-7 max-w-4xl">
-              <p className="whitespace-pre-wrap font-poppins text-[18px] leading-[1.55] text-[#4C383A] sm:text-[20px] lg:text-[22px]">
-                {post.content}
-              </p>
-            </div>
+            {post.content && (
+              <div className="mt-7 max-w-4xl">
+                <p className="whitespace-pre-wrap font-poppins text-[18px] leading-[1.55] text-[#4C383A] sm:text-[20px] lg:text-[22px]">
+                  {post.content}
+                </p>
+              </div>
+            )}
+
+            {post.media_url && (
+              <MediaAttachment
+                mediaUrl={post.media_url}
+                alt={`${post.anonymous_name || "Anonymous"} attachment`}
+                containerClassName="mt-6 max-w-3xl overflow-hidden rounded-[24px] bg-[#F4E8D5] p-4 shadow-[0_10px_28px_rgba(76,56,58,0.12)]"
+                imageClassName="max-h-[520px]"
+              />
+            )}
 
             <div className="mt-8 flex flex-wrap items-center gap-5 text-[#4C383A]">
               <button
@@ -210,8 +230,8 @@ export default function PostDetail() {
             {isReplyComposerOpen && (
               <div className="mt-6 max-w-3xl rounded-[18px] bg-[#F4E8D5] p-4">
                 <ReplyInput
-                  onSubmit={async (content) => {
-                    await handleReplySubmit(null, content);
+                  onSubmit={async (payload) => {
+                    await handleReplySubmit(null, payload);
                     setIsReplyComposerOpen(false);
                   }}
                   onCancel={() => setIsReplyComposerOpen(false)}
