@@ -7,6 +7,8 @@ import CreatePost from '../pages/CreatePost';
 import NotFound from '../pages/NotFound';
 import PostDetail from '../pages/PostDetail';
 import Profile from '../pages/Profile';
+import ChangePassword from '../pages/ChangePassword';
+import ChangeEmail from '../pages/ChangeEmail';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 
@@ -28,6 +30,8 @@ const AppRouter = () => {
           <Route path="/prompt/:postId" element={<PostDetail />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/change-password" element={<ChangePassword />} />
+          <Route path="/profile/change-email" element={<ChangeEmail />} />
           <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />
           <Route path="/explore" element={<Navigate to="/prompts" replace />} />
         </Route>
