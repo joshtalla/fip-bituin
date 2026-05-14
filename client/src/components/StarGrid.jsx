@@ -23,7 +23,9 @@ function LoadMoreButton({ loadMore, isLoadingMore }) {
 }
 
 async function fetchPosts(promptId, page) {
-  return fetchJson(`/api/prompts/${promptId}/posts?page=${page}&limit=${PAGE_SIZE}`);
+  return fetchJson(
+    `/api/prompts/${promptId}/posts?page=${page}&limit=${PAGE_SIZE}`,
+  );
 }
 
 export default function StarGrid({ promptId }) {
@@ -38,7 +40,8 @@ export default function StarGrid({ promptId }) {
     const starBounds = event.currentTarget.getBoundingClientRect();
     const previewWidth = 482;
     const gutter = 24;
-    const centeredLeft = starBounds.left + starBounds.width / 2 - previewWidth / 2;
+    const centeredLeft =
+      starBounds.left + starBounds.width / 2 - previewWidth / 2;
 
     if (centeredLeft < gutter) {
       return "left";
@@ -60,7 +63,10 @@ export default function StarGrid({ promptId }) {
 
     setIsLoadingMore(true);
     try {
-      const { posts: newPosts, hasMore: nextHasMore } = await fetchPosts(promptId, page + 1);
+      const { posts: newPosts, hasMore: nextHasMore } = await fetchPosts(
+        promptId,
+        page + 1,
+      );
 
       if (newPosts.length === 0) {
         setHasMore(false);
@@ -102,7 +108,8 @@ export default function StarGrid({ promptId }) {
         }
 
         // Fetch the first page of posts
-        const { posts: firstPage, hasMore: firstPageHasMore } = await fetchPosts(promptId, 1);
+        const { posts: firstPage, hasMore: firstPageHasMore } =
+          await fetchPosts(promptId, 1);
         if (cancelled) return;
 
         // Set the posts and page state so that the first page of posts is displayed
@@ -188,6 +195,7 @@ export default function StarGrid({ promptId }) {
                   mediaWidth={post.media_width}
                   mediaHeight={post.media_height}
                   placement={hoveredStar.placement}
+                  verticalAlign="above"
                 />
               )}
             </div>
