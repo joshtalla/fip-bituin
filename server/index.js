@@ -6,6 +6,7 @@ const cors = require('cors');
 const promptRoutes = require('./routes/prompts');
 const postRoutes = require('./routes/posts');
 const reportRoutes = require('./routes/reports');
+const translateRoutes = require('./routes/translate');
 const savedPostsRoutes = require('./routes/savedPosts');
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/posts', postRoutes);
 app.use('/api', reportRoutes);
+app.use('/api', translateRoutes);
 app.use('/api', savedPostsRoutes);
 
 // Routes

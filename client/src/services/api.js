@@ -21,3 +21,21 @@ export const fetchJson = async (path, options = {}) => {
 };
 
 export { API_BASE_URL };
+
+/**
+ * Translate post content to the user's main language using backend API.
+ * @param {Object} params - Parameters for translation.
+ * @param {string} params.text - The text to translate.
+ * @param {string} params.userId - The user's ID (for language preference).
+ * 
+ * @returns {Promise<string>} The translated text.
+ */
+export async function translatePost({ text, userId }) {
+  return fetchJson("/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, userId }),
+  });
+}

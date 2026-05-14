@@ -11,8 +11,8 @@ import { Link, useParams } from "react-router-dom";
 import { AuthContext } from "../context/auth-context";
 import ReplyInput from "../components/ReplyInput";
 import ReplyThread from "../components/ReplyThread";
+import { fetchJson, translatePost } from "../services/api";
 import MediaAttachment from "../components/MediaAttachment";
-import { fetchJson } from "../services/api";
 import { uploadMedia } from "../services/mediaService";
 import { supabase } from "../services/supabaseClient";
 
@@ -46,6 +46,20 @@ export default function PostDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isReplyComposerOpen, setIsReplyComposerOpen] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  // Handles translation of the post content
+  const handleTranslate = async () => {
+    if (!post || translating) return;
+    setTranslating(true);
+    try {
+      const userId = user?.id || user?.auth_user_id;
+      const result = await translatePost({ text: post.content, userId });
+      setPost((current) => current ? { ...current, content: result.translatedText || result.text || result } : current);
+    } catch (err) {
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -185,9 +199,15 @@ export default function PostDetail() {
             )}
 
             <div className="mt-8 flex flex-wrap items-center gap-5 text-[#4C383A]">
-              <span className="inline-flex min-w-[150px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-6 py-3 font-darumadropone text-[26px] leading-none text-[#4C383A] shadow-[0_8px_20px_rgba(140,151,188,0.35)]">
-                translate
-              </span>
+              <button
+                type="button"
+                onClick={handleTranslate}
+                className="inline-flex min-w-[150px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-6 py-3 font-darumadropone text-[26px] leading-none text-[#4C383A] shadow-[0_8px_20px_rgba(140,151,188,0.35)] disabled:opacity-60"
+                disabled={translating}
+                aria-label="Translate post"
+              >
+                {translating ? "Translating..." : "translate"}
+              </button>
               <button
                 type="button"
                 onClick={() => setIsReplyComposerOpen((current) => !current)}
