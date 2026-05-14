@@ -15,6 +15,7 @@ import { fetchJson, translatePost } from "../services/api";
 import MediaAttachment from "../components/MediaAttachment";
 import { uploadMedia } from "../services/mediaService";
 import { supabase } from "../services/supabaseClient";
+import { savePost, unsavePost } from "../services/savedPostService";
 
 const REPLY_PAGE_SIZE = 100;
 
@@ -47,6 +48,9 @@ export default function PostDetail() {
   const [error, setError] = useState(null);
   const [isReplyComposerOpen, setIsReplyComposerOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   // Handles translation of the post content
   const handleTranslate = async () => {
     if (!post || translating) return;
@@ -58,6 +62,26 @@ export default function PostDetail() {
     } catch (err) {
     } finally {
       setTranslating(false);
+    }
+  };
+
+  const handleSaveToggle = async () => {
+    if (!post || isSaving) return;
+    const previousSavedState = isSaved;
+    const nextSavedState = !isSaved;
+    setIsSaved(nextSavedState);
+    setIsSaving(true);
+    try {
+      if (nextSavedState) {
+        await savePost(post.id);
+      } else {
+        await unsavePost(post.id);
+      }
+    } catch (err) {
+      setIsSaved(previousSavedState);
+      alert("Failed to update saved post. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -219,9 +243,18 @@ export default function PostDetail() {
               <span className="text-[28px]">
                 <LuHeart />
               </span>
-              <span className="text-[28px]">
-                <LuBookmark />
-              </span>
+              <button
+                type="button"
+                onClick={handleSaveToggle}
+                disabled={isSaving}
+                className="border-0 bg-transparent p-0 text-[#4C383A] transition hover:text-[#2f2325] disabled:opacity-60"
+                aria-label={isSaved ? "Unsave post" : "Save post"}
+              >
+                <LuBookmark
+                  className="text-[28px]"
+                  fill={isSaved ? "currentColor" : "none"}
+                />
+              </button>
               <span className="text-[28px]">
                 <LuEllipsis />
               </span>

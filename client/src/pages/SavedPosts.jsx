@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Stars from '../components/Stars';
-import { mockPosts } from '../mocks/mockData';
-
-// Temporary mock function for fetching "Saved Posts"
-const fetchSavedPosts = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // Return a different subset to simulate saved posts
-  return mockPosts.slice(4, 8); 
-};
+import { getSavedPosts, unsavePost } from '../services/savedPostService';
 
 export default function SavedPosts() {
   const navigate = useNavigate();
@@ -21,9 +14,8 @@ export default function SavedPosts() {
     const loadPosts = async () => {
       try {
         setIsLoading(true);
-        // TODO: Replace with real API call when Justin finishes the backend
-        const saved = await fetchSavedPosts();
-        setPosts(saved);
+        const saved = await getSavedPosts();
+        setPosts(saved.savedPosts || saved.posts || saved);
       } catch (err) {
         setError("Failed to load your saved posts. Please try again.");
       } finally {
@@ -42,9 +34,7 @@ export default function SavedPosts() {
     setPosts(current => current.filter(p => p.id !== postId));
 
     try {
-      // TODO: Replace with real DELETE request when backend is ready
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // throw new Error("Mock API Failure"); // uncomment to test rollback!
+      await unsavePost(postId);
     } catch (err) {
       // If the backend fails, put the post back and warn the user
       setPosts(previousPosts);
