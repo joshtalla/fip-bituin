@@ -6,6 +6,7 @@ import Search from '../pages/Search';
 import CreatePost from '../pages/CreatePost';
 import NotFound from '../pages/NotFound';
 import PostDetail from '../pages/PostDetail';
+import Profile from '../pages/Profile';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 
@@ -26,7 +27,7 @@ const AppRouter = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/prompt/:postId" element={<PostDetail />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
-          <Route path="/profile" element={<Navigate to="/prompts" replace />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />
           <Route path="/explore" element={<Navigate to="/prompts" replace />} />
         </Route>

@@ -45,6 +45,9 @@ const Navbar = () => {
           ) : (
             <>
               <li>
+                <NavLink to="/profile">profile</NavLink>
+              </li>
+              <li>
                 <NavLink
                   to="/prompts"
                   end
