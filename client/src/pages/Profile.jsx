@@ -138,14 +138,6 @@ const Profile = () => {
   const [buttonVisible, setButtonVisible] = useState(false)
   const [fadingOut, setFadingOut] = useState(false)
 
-  // Disable scroll bar and function when entering page
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
   useEffect(() => {
     setTimeout(() => setGreetingVisible(true), 100)
     setTimeout(() => setGlobeVisible(true), 350)

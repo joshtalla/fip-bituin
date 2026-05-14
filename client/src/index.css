@@ -9,16 +9,18 @@ body,
   min-height: 100%;
   margin: 0;
   padding: 0;
+  background-color: #07133b;
+  background-image: linear-gradient(to top, #682b1d, #07133b);
+  background-repeat: no-repeat;
 }
 
 html {
   min-height: 100vh;
-  background: linear-gradient(to top, #682b1d, #07133b);
+  overscroll-behavior-y: none;
 }
 
 body {
   min-height: 100vh;
-  background: transparent;
   font-family: "Poppins", Arial, Helvetica, sans-serif;
   line-height: 1.5;
   font-weight: 400;
