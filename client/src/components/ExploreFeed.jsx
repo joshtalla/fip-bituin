@@ -1,11 +1,13 @@
 import ExploreCard from "./ExploreCard";
 import PostPreview from "./PostPreview";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { StarPost, SkeletonStarPost } from "./StarPost";
 import { fetchJson } from "../services/api";
 import { IoCloseOutline } from "react-icons/io5";
 
-const PROMPTS_PAGE_SIZE = 4;
+const PROMPTS_PAGE_SIZE = 3;
+// const PROMPT_PAGE_HEIGHT =
+//   PROMPTS_PAGE_SIZE * 190 + (PROMPTS_PAGE_SIZE - 1) * 24;
 const DESKTOP_POSTS_PAGE_SIZE = 12;
 const MOBILE_POSTS_PAGE_SIZE = 9;
 
@@ -48,37 +50,31 @@ function LoadingAnimation() {
   );
 }
 
-function Pagination({
-  postsPage,
-  totalPostPages,
-  loadingPosts,
-  handlePreviousPostsPage,
-  handleNextPostsPage,
-}) {
+function Pagination({ page, totalPages, loading, onPrevious, onNext }) {
   return (
-    <div className="flex items-center justify-center gap-4">
+    <nav className="flex items-center justify-center gap-4">
       <button
         type="button"
-        onClick={handlePreviousPostsPage}
-        disabled={postsPage === 1 || loadingPosts}
+        onClick={onPrevious}
+        disabled={page === 1 || loading}
         className="h-[44px] rounded-lg bg-[#EFB758] px-4 py-2 font-poppins text-[#4C383A] disabled:cursor-not-allowed disabled:opacity-50"
       >
         Previous
       </button>
 
       <p className="text-center font-poppins text-[#FBF3E5]">
-        Page {postsPage} of {totalPostPages}
+        Page {page} of {totalPages}
       </p>
 
       <button
         type="button"
-        onClick={handleNextPostsPage}
-        disabled={postsPage === totalPostPages || loadingPosts}
+        onClick={onNext}
+        disabled={page === totalPages || loading}
         className="h-[44px] rounded-lg bg-[#EFB758] px-4 py-2 font-poppins text-[#4C383A] disabled:cursor-not-allowed disabled:opacity-50"
       >
         Next
       </button>
-    </div>
+    </nav>
   );
 }
 
@@ -187,17 +183,19 @@ function StarBoard({
         setHoveredStar={setHoveredStar}
       />
 
-      {totalPostPages > 1 && (
-        <div className="shrink-0 pt-8 lg:pt-16">
+      <div className="shrink-0 max-lg:pt-10 lg:pt-16">
+        {totalPostPages > 1 ? (
           <Pagination
-            postsPage={postsPage}
-            totalPostPages={totalPostPages}
-            loadingPosts={loadingPosts}
-            handlePreviousPostsPage={handlePreviousPostsPage}
-            handleNextPostsPage={handleNextPostsPage}
+            page={postsPage}
+            totalPages={totalPostPages}
+            loading={loadingPosts}
+            onPrevious={handlePreviousPostsPage}
+            onNext={handleNextPostsPage}
           />
-        </div>
-      )}
+        ) : (
+          <div className="h-[44px]" aria-hidden="true" />
+        )}
+      </div>
     </div>
   );
 }
@@ -217,7 +215,7 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 lg:hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:hidden">
       {/* Backdrop */}
       <button
         type="button"
@@ -227,8 +225,8 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
       />
 
       {/* Modal card */}
-      <div className="relative z-10 w-full max-w-[651px] overflow-hidden rounded-3xl bg-[#4C383A] p-4 shadow-2xl">
-        <div className="mb-8 flex items-start justify-between gap-4">
+      <div className="relative z-10 mx-auto flex max-h-[92dvh] w-full max-w-[651px] flex-col overflow-hidden rounded-3xl bg-[#4C383A] p-4 shadow-2xl sm:max-h-[86dvh] md:max-h-[84dvh]">
+        <div className="mb-8 flex shrink-0 items-start justify-between gap-4">
           <div>
             <p className="font-poppins text-sm text-[#FBF3E5]/70">posts for:</p>
 
@@ -246,7 +244,9 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
           </button>
         </div>
 
-        <div className="overflow-hidden">{children}</div>
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -255,8 +255,13 @@ function MobileStarBoardModal({ open, onClose, selectedPrompt, children }) {
 export default function ExploreFeed() {
   const [archivedPrompts, setArchivedPrompts] = useState([]);
   const [loadingArchive, setLoadingArchive] = useState(true);
+  const [loadingArchivePage, setLoadingArchivePage] = useState(false);
   const [error, setError] = useState(null);
+  const [archivePageError, setArchivePageError] = useState(null);
   const [selectedPrompt, setSelectedPrompt] = useState(null);
+
+  const [archivePage, setArchivePage] = useState(1);
+  const [totalArchivePages, setTotalArchivePages] = useState(1);
 
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
@@ -269,7 +274,13 @@ export default function ExploreFeed() {
 
   const [isMobileBoardOpen, setIsMobileBoardOpen] = useState(false);
 
-  const loadPostsPage = async (prompt, page = 1) => {
+  const archiveLoadSeq = useRef(0);
+
+  const loadPostsPage = async (
+    prompt,
+    page = 1,
+    { shouldApply = () => true } = {},
+  ) => {
     if (!prompt) return;
 
     const requestedPageSize = getPostsPageSize();
@@ -281,6 +292,8 @@ export default function ExploreFeed() {
 
     try {
       const data = await fetchPromptBoard(prompt.id, page, requestedPageSize);
+      if (!shouldApply()) return;
+
       const { items, total, page: boardPage, limit } = data.posts;
       const pageSize = limit ?? requestedPageSize;
 
@@ -288,6 +301,8 @@ export default function ExploreFeed() {
       setPostsPage(boardPage ?? page);
       setTotalPostPages(Math.max(1, Math.ceil((total ?? 0) / pageSize)));
     } catch (e) {
+      if (!shouldApply()) return;
+
       setPostsError(e.message ?? "Could not load posts");
       setPosts([]);
       setTotalPostPages(1);
@@ -297,6 +312,7 @@ export default function ExploreFeed() {
   };
 
   const handlePromptClick = async (prompt) => {
+    setArchivePageError(null);
     setSelectedPrompt(prompt);
     setPosts([]);
     setPostsPage(1);
@@ -325,42 +341,78 @@ export default function ExploreFeed() {
     loadPostsPage(selectedPrompt, postsPage - 1);
   };
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadArchivePage = async (page, { initial = false } = {}) => {
+    const seq = ++archiveLoadSeq.current;
 
-    const load = async () => {
+    if (initial) {
       setLoadingArchive(true);
-      setError(null);
+    } else {
+      setLoadingArchivePage(true);
+    }
+    setError(null);
+    setArchivePageError(null);
 
-      try {
-        const data = await fetchArchivedPrompts(1);
-        if (cancelled) return;
+    try {
+      const data = await fetchArchivedPrompts(page);
+      if (seq !== archiveLoadSeq.current) return;
 
-        setArchivedPrompts(data.prompts);
+      const prompts = data.prompts ?? [];
+      const limit = data.limit ?? PROMPTS_PAGE_SIZE;
+      const total = data.total ?? 0;
+      const resolvedPage = data.page ?? page;
 
-        const firstPrompt = data.prompts[0] ?? null;
-        setSelectedPrompt(firstPrompt);
+      setArchivedPrompts(prompts);
+      setArchivePage(resolvedPage);
+      setTotalArchivePages(Math.max(1, Math.ceil((total || 0) / limit)));
 
-        if (firstPrompt) {
-          await loadPostsPage(firstPrompt, 1);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e.message ?? "Could not load archive");
-          setArchivedPrompts([]);
-        }
-      } finally {
-        if (!cancelled) {
+      const firstPrompt = prompts[0] ?? null;
+      setSelectedPrompt(firstPrompt);
+      setHoveredStar(null);
+      setIsMobileBoardOpen(false);
+
+      if (firstPrompt) {
+        await loadPostsPage(firstPrompt, 1, {
+          shouldApply: () => seq === archiveLoadSeq.current,
+        });
+      } else {
+        setPosts([]);
+        setPostsPage(1);
+        setTotalPostPages(1);
+        setPostsError(null);
+      }
+    } catch (e) {
+      if (seq !== archiveLoadSeq.current) return;
+
+      const message = e.message ?? "Could not load archive";
+      if (initial) {
+        setError(message);
+        setArchivedPrompts([]);
+      } else {
+        setArchivePageError(message);
+      }
+    } finally {
+      if (seq === archiveLoadSeq.current) {
+        if (initial) {
           setLoadingArchive(false);
+        } else {
+          setLoadingArchivePage(false);
         }
       }
-    };
+    }
+  };
 
-    load();
+  const handleNextArchivePage = () => {
+    if (archivePage >= totalArchivePages) return;
+    loadArchivePage(archivePage + 1);
+  };
 
-    return () => {
-      cancelled = true;
-    };
+  const handlePreviousArchivePage = () => {
+    if (archivePage <= 1) return;
+    loadArchivePage(archivePage - 1);
+  };
+
+  useEffect(() => {
+    loadArchivePage(1, { initial: true });
   }, []);
 
   if (loadingArchive) {
@@ -383,7 +435,7 @@ export default function ExploreFeed() {
 
   return (
     <section id="explore-feed">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 lg:grid-cols-2">
         {/* Header sits in the left grid column */}
         <div className="flex justify-center">
           <h1 className="w-full max-w-[651px] font-poppins text-[24px] font-semibold text-[#FBF3E5]">
@@ -392,22 +444,47 @@ export default function ExploreFeed() {
         </div>
 
         {/* Desktop-only empty right column keeps the grid structure aligned */}
-        <div className="hidden lg:block" />
+        <div className="hidden lg:block" aria-hidden="true" />
 
-        {/* Prompt column */}
-        <div className="flex flex-col items-center gap-6">
-          {archivedPrompts.map((prompt) => (
-            <button
-              key={prompt.id}
-              type="button"
-              onClick={() => handlePromptClick(prompt)}
-              className={`w-full max-w-[651px] cursor-pointer rounded-2xl text-left ring-offset-2 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EFB758] ${
-                selectedPrompt?.id === prompt.id ? "ring-2 ring-[#EFB758]" : ""
-              }`}
-            >
-              <ExploreCard prompt={prompt} />
-            </button>
-          ))}
+        <div className="flex h-full min-h-0 w-full flex-col items-center max-lg:min-h-[calc(100dvh-20rem)]">
+          <div className="flex h-[540px] w-full max-w-[651px] flex-col gap-6 sm:h-[618px]">
+            {archivedPrompts.map((prompt) => (
+              <button
+                key={prompt.id}
+                type="button"
+                onClick={() => handlePromptClick(prompt)}
+                className={`w-full cursor-pointer rounded-2xl text-left ring-offset-2 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#EFB758] ${
+                  selectedPrompt?.id === prompt.id
+                    ? "ring-2 ring-[#EFB758]"
+                    : ""
+                }`}
+              >
+                <ExploreCard prompt={prompt} />
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 basis-0" aria-hidden="true" />
+
+          <div className="flex w-full max-w-[651px] shrink-0 flex-col gap-2">
+            {archivePageError && (
+              <p className="font-poppins text-red-400" role="alert">
+                {archivePageError}
+              </p>
+            )}
+
+            {totalArchivePages > 1 && (
+              <div className="max-lg:pt-16 lg:pt-16">
+                <Pagination
+                  page={archivePage}
+                  totalPages={totalArchivePages}
+                  loading={loadingArchivePage}
+                  onPrevious={handlePreviousArchivePage}
+                  onNext={handleNextArchivePage}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Desktop-only right column star board */}

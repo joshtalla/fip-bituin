@@ -9,7 +9,7 @@ export default function ExploreCard({ prompt }) {
   );
 
   return (
-    <div className="h-[190px] w-full rounded-2xl bg-[#FBF3E5] p-4 transition-colors md:w-[651px]">
+    <div className="h-[170px] w-full rounded-2xl bg-[#FBF3E5] p-4 transition-colors md:h-[190px] md:w-[651px]">
       <span className="font-poppins text-[#4C383A]">
         {formattedDate} - {prompt.prompt_text}
       </span>
