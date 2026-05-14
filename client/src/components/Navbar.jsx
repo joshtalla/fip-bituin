@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth-context";
 import { signOut } from "../services/authService";
 
@@ -28,7 +28,9 @@ const Navbar = () => {
   return (
     <nav className={`navbar z-10 ${isPromptDetail ? "navbar-detail" : ""}`}>
       <div className="navbar-inner">
-        <div className="logo">bituin.</div>
+        <Link to="/prompts" className="logo">
+          bituin.
+        </Link>
         <ul className="nav-links">
           {isPromptDetail ? (
             <>
@@ -45,15 +47,7 @@ const Navbar = () => {
           ) : (
             <>
               <li>
-                <NavLink
-                  to="/prompts"
-                  end
-                  className={({ isActive }) =>
-                    isActive && !isPromptBoardSearch ? "active" : undefined
-                  }
-                >
-                  prompts
-                </NavLink>
+                <NavLink to="/profile">profile</NavLink>
               </li>
               <li>
                 <NavLink

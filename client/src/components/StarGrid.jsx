@@ -191,6 +191,9 @@ export default function StarGrid({ promptId }) {
                   username={post.anonymous_name}
                   country={post.country}
                   content={post.content}
+                  mediaUrl={post.media_url}
+                  mediaWidth={post.media_width}
+                  mediaHeight={post.media_height}
                   placement={hoveredStar.placement}
                   verticalAlign="above"
                 />
