@@ -70,5 +70,18 @@ router.post('/replies/:replyId/replies', repliesController.createNestedReply);
  */
 router.get('/posts/:postId/replies', repliesController.getRepliesForPost);
 
+/**
+ * Fetch replies authored by the authenticated user, with thread context.
+ *
+ * Route:
+ *   GET /api/users/me/replies
+ *
+ * Delegates to:
+ *   repliesController.getMyReplies
+ *
+ * Example: GET http://localhost:3000/api/users/me/replies?sort=desc
+ */
+router.get('/users/me/replies', repliesController.getMyReplies);
+
 // Export router for mounting in server/index.js
 module.exports = router;

@@ -34,21 +34,13 @@ const Navbar = () => {
         <ul className="nav-links">
           {isPromptDetail ? (
             <>
-              <li>
-                <NavLink to="/profile">profile</NavLink>
-              </li>
-              <li>
-                <NavLink to="/explore">explore</NavLink>
-              </li>
-              <li>
-                <NavLink to="/prompts?showSearch=1">search</NavLink>
-              </li>
+              <li><NavLink to="/profile">profile</NavLink></li>
+              <li><NavLink to="/explore">explore</NavLink></li>
+              <li><NavLink to="/prompts?showSearch=1">search</NavLink></li>
             </>
           ) : (
             <>
-              <li>
-                <NavLink to="/profile">profile</NavLink>
-              </li>
+              <li><NavLink to="/profile">profile</NavLink></li>
               <li>
                 <NavLink
                   to="/prompts?showSearch=1"

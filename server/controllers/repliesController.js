@@ -208,6 +208,48 @@ exports.createNestedReply = async (req, res) => {
 };
 
 /**
+ * GET /api/users/me/replies
+ *
+ * Returns the authenticated user's replies, joined with their thread context
+ * (post + prompt). Powers the /profile/my-comments page so the user can see
+ * where each comment lives and click through to that thread.
+ *
+ * Query params:
+ *   - sort=asc|desc (default: desc)
+ *
+ * Returns:
+ *   200 with { replies }
+ *   401 if the bearer token is missing or invalid
+ *   500 for unexpected errors
+ */
+exports.getMyReplies = async (req, res) => {
+    try {
+        // 401: Auth resolution from Bearer token. Identical to the other endpoints.
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Unauthenticated: No auth token' });
+        }
+        const [scheme, token] = authHeader.split(' ');
+        if (scheme !== 'Bearer' || !token) {
+            return res.status(401).json({ message: 'Unauthenticated: Invalid authorization format' });
+        }
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data.user) {
+            return res.status(401).json({ message: 'Unauthenticated: Invalid token' });
+        }
+
+        const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
+
+        const replies = await replyService.getRepliesForAuthUser(data.user.id, { sort });
+
+        return res.status(200).json({ replies });
+    } catch (err) {
+        console.error('Error fetching my replies:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+/**
  * GET /api/posts/:postId/replies
  *
  * Fetches replies for a post as a flat, paginated list.

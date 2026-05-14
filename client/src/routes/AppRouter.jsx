@@ -13,6 +13,7 @@ import Explore from '../pages/Explore';
 import SavedPosts from '../pages/SavedPosts';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
+import MyComments from '../pages/MyComments';
 
 const AppRouter = () => {
   return (
@@ -35,6 +36,10 @@ const AppRouter = () => {
           <Route path="/prompt/:postId" element={<PostDetail />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/my-comments" element={<MyComments />} />
+          <Route path="/profile/change-location" element={<NotFound />} />
+          <Route path="/profile/change-language" element={<NotFound />} />
+          <Route path="/profile/my-posts" element={<NotFound />} />
           <Route path="/profile/change-password" element={<ChangePassword />} />
           <Route path="/profile/change-email" element={<ChangeEmail />} />
           <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />
