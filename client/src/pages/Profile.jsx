@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import Stars from '../components/Stars'
 import { supabase } from '../services/supabaseClient'
 
@@ -149,7 +148,7 @@ const Profile = () => {
     if (data) setUsername(data.username)
     }
     fetchUsername()
-  }, [])
+  }, [navigate])
 
   const handleConstellationClick = (route) => {
     setFading(true)
@@ -172,7 +171,6 @@ const Profile = () => {
       transition: 'opacity 0.4s ease',
     }}>
       <Stars />
-      <Navbar />
 
       {/* Main content */}
       <div style={{

@@ -8,6 +8,7 @@ import {
 } from "react-icons/lu";
 import NestedReplyCard from "./NestedReplyCard";
 import ReplyInput from "./ReplyInput";
+import MediaAttachment from "./MediaAttachment";
 
 export default function ReplyCard({
 	reply,
@@ -57,9 +58,20 @@ export default function ReplyCard({
 					)}
 				</div>
 
-				<p className="mt-3 max-w-3xl whitespace-pre-wrap font-poppins text-[15px] leading-7 text-[#4C383A] sm:text-[16px]">
-					{reply.content}
-				</p>
+				{reply.content && (
+					<p className="mt-3 max-w-3xl whitespace-pre-wrap font-poppins text-[15px] leading-7 text-[#4C383A] sm:text-[16px]">
+						{reply.content}
+					</p>
+				)}
+
+				{reply.media_url && (
+					<MediaAttachment
+						mediaUrl={reply.media_url}
+						alt={`${reply.anonymous_name || "Anonymous"} reply attachment`}
+						containerClassName="mt-4 max-w-2xl overflow-hidden rounded-[18px] bg-[#F4E8D5] p-3"
+						imageClassName="max-h-[320px]"
+					/>
+				)}
 
 				<div className="mt-3 flex flex-wrap items-center gap-4">
 					<span className="inline-flex min-w-[125px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-4 py-2 font-darumadropone text-[22px] leading-none text-[#4C383A] shadow-[0_6px_18px_rgba(140,151,188,0.35)]">
@@ -77,7 +89,7 @@ export default function ReplyCard({
 			{isReplying && (
 				<div className="mt-4 max-w-2xl rounded-[18px] bg-[#F6EDDC] p-4">
 					<ReplyInput
-						onSubmit={(content) => onReplySubmit(reply.id, content)}
+						onSubmit={(payload) => onReplySubmit(reply.id, payload)}
 						onCancel={() => setIsReplying(false)}
 						placeholder="reply to this message..."
 						submitLabel="reply"

@@ -1,6 +1,7 @@
 import { CgProfile } from "react-icons/cg";
 import { IoLocationOutline } from "react-icons/io5";
 import { LuCornerDownRight, LuMessageCircle } from "react-icons/lu";
+import MediaAttachment from "./MediaAttachment";
 
 export default function NestedReplyCard({ reply, formatTimestamp }) {
 	return (
@@ -29,9 +30,20 @@ export default function NestedReplyCard({ reply, formatTimestamp }) {
 					<span className="text-[#866a6e]">{formatTimestamp(reply.created_at)}</span>
 				</div>
 
-				<p className="mt-3 max-w-2xl whitespace-pre-wrap font-poppins text-[14px] leading-7 text-[#4C383A] sm:text-[15px]">
-					{reply.content}
-				</p>
+				{reply.content && (
+					<p className="mt-3 max-w-2xl whitespace-pre-wrap font-poppins text-[14px] leading-7 text-[#4C383A] sm:text-[15px]">
+						{reply.content}
+					</p>
+				)}
+
+				{reply.media_url && (
+					<MediaAttachment
+						mediaUrl={reply.media_url}
+						alt={`${reply.anonymous_name || "Anonymous"} nested reply attachment`}
+						containerClassName="mt-4 max-w-xl overflow-hidden rounded-[16px] bg-[#F4E8D5] p-3"
+						imageClassName="max-h-[260px]"
+					/>
+				)}
 			</div>
 		</article>
 	);

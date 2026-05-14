@@ -32,6 +32,7 @@ const AppRouter = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/prompt/:postId" element={<PostDetail />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
+          
         </Route>
 
         {/* Pages that render their own Navbar or don't need AppLayout */}

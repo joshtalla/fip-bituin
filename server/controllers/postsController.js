@@ -33,15 +33,16 @@ const getPost = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
-    const { prompt_id, content } = req.body;
+    const { prompt_id, content, media_url, media_type, media_width, media_height } = req.body;
+    const normalizedContent = typeof content === 'string' ? content.trim() : '';
 
     
     if (!prompt_id) {
       return res.status(400).json({ error: "Prompt ID required" });
     }
 
-    if (!content) {
-      return res.status(400).json({ error: "Content required" });
+    if (!normalizedContent && !media_url) {
+      return res.status(400).json({ error: "Content or media required" });
     }
 
     
@@ -62,17 +63,25 @@ const createPost = async (req, res) => {
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    const auth_user_id = data.user.id;
-
     const post = await insertPost({
       prompt_id,
-      content,
-      auth_user_id
+      content: normalizedContent,
+      authUser: data.user,
+      media: {
+        media_url,
+        media_type,
+        media_width,
+        media_height,
+      },
     });
 
     return res.status(201).json(post);
 
   } catch (err) {
+    if (err.status) {
+      return res.status(err.status).json({ error: err.message });
+    }
+
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }

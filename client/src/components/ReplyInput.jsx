@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LuSend } from "react-icons/lu";
+import MediaPicker from "./MediaPicker";
+import { clearLocalMediaDraft, createLocalMediaDraft } from "../services/mediaService";
 
 export default function ReplyInput({
 	onSubmit,
@@ -11,22 +13,46 @@ export default function ReplyInput({
 }) {
 	const [value, setValue] = useState("");
 	const [error, setError] = useState("");
+	const [mediaError, setMediaError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [selectedMedia, setSelectedMedia] = useState(null);
+
+	useEffect(() => () => {
+		clearLocalMediaDraft(selectedMedia);
+	}, [selectedMedia]);
+
+	const handleMediaSelect = async (file) => {
+		try {
+			const mediaDraft = await createLocalMediaDraft(file);
+			setMediaError("");
+			setError("");
+			setSelectedMedia(mediaDraft);
+		} catch (selectionError) {
+			setMediaError(selectionError.message || "Unable to attach media.");
+		}
+	};
+
+	const clearSelectedMedia = () => {
+		setMediaError("");
+		setSelectedMedia(null);
+	};
 
 	const handleSubmit = async (event) => {
 		event.preventDefault();
 		const trimmedValue = value.trim();
 
-		if (!trimmedValue) {
-			setError("Reply cannot be empty.");
+		if (!trimmedValue && !selectedMedia) {
+			setError("Reply text or media is required.");
 			return;
 		}
 
 		try {
 			setIsSubmitting(true);
 			setError("");
-			await onSubmit(trimmedValue);
+			await onSubmit({ content: trimmedValue, media: selectedMedia });
 			setValue("");
+			setSelectedMedia(null);
+			setMediaError("");
 			onCancel?.();
 		} catch (submitError) {
 			setError(submitError.message || "Failed to publish reply.");
@@ -38,6 +64,8 @@ export default function ReplyInput({
 	const handleCancel = () => {
 		setValue("");
 		setError("");
+		setMediaError("");
+		setSelectedMedia(null);
 		onCancel?.();
 	};
 
@@ -56,6 +84,14 @@ export default function ReplyInput({
 				autoFocus={autoFocus}
 				disabled={isSubmitting}
 				className="w-full resize-none rounded-[22px] border border-[#D9CBB2] bg-[#E8DFCE] px-4 py-3 font-poppins text-[15px] leading-7 text-[#4C383A] outline-none transition focus:border-[#8C97BC]"
+			/>
+
+			<MediaPicker
+				media={selectedMedia}
+				error={mediaError}
+				onSelect={handleMediaSelect}
+				onRemove={clearSelectedMedia}
+				disabled={isSubmitting}
 			/>
 
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

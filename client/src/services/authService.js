@@ -1,17 +1,45 @@
 import { supabase } from "./supabaseClient";
 
-const buildUsername = (email, username) => {
+const FILIPINO_AMERICAN_PREFIXES = [
+  "Manila",
+  "Mabuhay",
+  "Harana",
+  "Sampaguita",
+  "Jeepney",
+  "Bituin",
+  "Tagpuan",
+  "Barkada",
+  "HaloHalo",
+  "Kundiman",
+];
+
+const FILIPINO_AMERICAN_SUFFIXES = [
+  "Dreamer",
+  "Voyager",
+  "Storyteller",
+  "Sunrise",
+  "Bridge",
+  "Rhythm",
+  "Lantern",
+  "Skylark",
+  "Trail",
+  "Wave",
+];
+
+const pickRandom = (values) => values[Math.floor(Math.random() * values.length)];
+
+const buildUsername = (username) => {
   if (username?.trim()) {
     return username.trim();
   }
 
-  const emailPrefix = email.split("@")[0]?.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-  const base = emailPrefix?.slice(0, 12) || "bituin";
-  return `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+  const prefix = pickRandom(FILIPINO_AMERICAN_PREFIXES);
+  const suffix = pickRandom(FILIPINO_AMERICAN_SUFFIXES);
+  return `${prefix}${suffix}${Math.floor(1000 + Math.random() * 9000)}`;
 };
 
-export const ensureUserProfile = async ({ authUserId, email, location, language, username }) => {
-  const resolvedUsername = buildUsername(email, username);
+export const ensureUserProfile = async ({ authUserId, location, language, username }) => {
+  const resolvedUsername = buildUsername(username);
 
   const { data: existingProfile, error: existingProfileError } = await supabase
     .from("users")
@@ -73,7 +101,7 @@ export const ensureUserProfile = async ({ authUserId, email, location, language,
 };
 
 export const signUp = async ({ email, password, location, language }) => {
-  const username = buildUsername(email);
+  const username = buildUsername();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
