@@ -9,6 +9,8 @@ import PostDetail from '../pages/PostDetail';
 import Profile from '../pages/Profile';
 import ChangePassword from '../pages/ChangePassword';
 import ChangeEmail from '../pages/ChangeEmail';
+import Explore from '../pages/Explore';
+import SavedPosts from '../pages/SavedPosts';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 
@@ -17,13 +19,16 @@ const AppRouter = () => {
     <Routes>
       <Route path="/" element={<Navigate to="/prompts" replace />} />
 
+      {/* Unauthenticated routes */}
       <Route element={<ProtectedRoute requireAuth={false} redirectTo="/prompts" />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/sign-up" element={<Navigate to="/signup" replace />} />
       </Route>
 
+      {/* Authenticated routes */}
       <Route element={<ProtectedRoute />}>
+        {/* Pages that use the shared AppLayout (Global Navbar) */}
         <Route element={<AppLayout />}>
           <Route path="/prompts" element={<PromptBoard />} />
           <Route path="/search" element={<Search />} />
@@ -35,8 +40,14 @@ const AppRouter = () => {
           <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />
           <Route path="/explore" element={<Navigate to="/prompts" replace />} />
         </Route>
+
+        {/* Pages that render their own Navbar or don't need AppLayout */}
         <Route path="/prompts/create" element={<CreatePost />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/saved-posts" element={<SavedPosts />} />
+        <Route path="/explore" element={<Explore />} />
       </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
