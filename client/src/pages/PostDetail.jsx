@@ -1,0 +1,237 @@
+import { useContext, useEffect, useState } from "react";
+import { CgProfile } from "react-icons/cg";
+import { IoCloseOutline, IoLocationOutline } from "react-icons/io5";
+import {
+  LuBookmark,
+  LuEllipsis,
+  LuHeart,
+  LuMessageCircle,
+} from "react-icons/lu";
+import { Link, useParams } from "react-router-dom";
+import { AuthContext } from "../context/auth-context";
+import ReplyInput from "../components/ReplyInput";
+import ReplyThread from "../components/ReplyThread";
+import MediaAttachment from "../components/MediaAttachment";
+import { fetchJson } from "../services/api";
+import { uploadMedia } from "../services/mediaService";
+import { supabase } from "../services/supabaseClient";
+
+const REPLY_PAGE_SIZE = 100;
+
+function formatTimestamp(value) {
+  if (!value) {
+    return "Unknown time";
+  }
+
+  const timestamp = new Date(value);
+
+  if (Number.isNaN(timestamp.getTime())) {
+    return "Unknown time";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(timestamp);
+}
+
+export default function PostDetail() {
+  const { postId } = useParams();
+  const { user } = useContext(AuthContext);
+  const [post, setPost] = useState(null);
+  const [replies, setReplies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isReplyComposerOpen, setIsReplyComposerOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPost = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const loadedPost = await fetchJson(`/api/posts/${postId}`);
+        const loadedReplies = await fetchJson(
+          `/api/posts/${postId}/replies?page=1&limit=${REPLY_PAGE_SIZE}`,
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        setPost(loadedPost);
+        setReplies(loadedReplies.replies || []);
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(loadError.status === 404 ? "Post not found." : "Failed to load post.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPost();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postId]);
+
+  const handleReplySubmit = async (parentReplyId, payload) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("Your session expired. Please sign in again.");
+    }
+
+    const endpoint = parentReplyId
+      ? `/api/replies/${parentReplyId}/replies`
+      : `/api/posts/${postId}/replies`;
+
+    const mediaPayload = payload.media
+      ? await uploadMedia({ media: payload.media, authUserId: session.user.id })
+      : {};
+
+    const createdReply = await fetchJson(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        content: payload.content,
+        ...mediaPayload,
+      }),
+    });
+
+    setReplies((currentReplies) => [...currentReplies, createdReply]);
+    setPost((currentPost) => {
+      if (!currentPost) {
+        return currentPost;
+      }
+
+      return {
+        ...currentPost,
+        reply_count: (currentPost.reply_count ?? 0) + 1,
+      };
+    });
+  };
+
+  return (
+    <div className="min-h-screen px-4 pb-20 pt-4 sm:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-[980px]">
+
+        {loading && (
+          <div className="mt-6 rounded-[30px] bg-[#FBF3E5] px-6 py-12 text-center font-poppins text-lg font-medium text-[#4C383A] shadow-[0_20px_45px_rgba(12,7,25,0.18)]">
+            Loading post...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="mt-6 rounded-[30px] bg-[#FBF3E5] px-6 py-12 text-center font-poppins text-lg font-medium text-[#8A3B2E] shadow-[0_20px_45px_rgba(12,7,25,0.18)]">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && post && (
+          <section className="mt-6 rounded-[28px] bg-[#FBF3E5] px-6 py-7 text-[#4C383A] shadow-[0_26px_60px_rgba(10,8,24,0.24)] sm:px-10 sm:py-8 lg:px-12 lg:py-9">
+            <div className="flex items-start justify-between gap-4">
+              <Link
+                to="/prompts"
+                aria-label="Back to prompt board"
+                className="border-0 bg-transparent p-0 text-[#4C383A] transition hover:text-[#2f2325]"
+              >
+                <IoCloseOutline className="text-[30px]" />
+              </Link>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4 text-[#4C383A] sm:gap-5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4C383A] text-[#FBF3E5]">
+                <CgProfile className="text-[25px]" />
+              </div>
+              <p className="font-poppins text-[24px] font-semibold leading-none sm:text-[28px]">
+                {post.anonymous_name || "username"}
+              </p>
+              <span className="inline-flex items-center gap-2 font-poppins text-[22px] font-medium leading-none text-[#4C383A] sm:text-[24px]">
+                <IoLocationOutline className="text-[24px] sm:text-[26px]" />
+                {post.country || "location, country"}
+              </span>
+            </div>
+
+            {post.content && (
+              <div className="mt-7 max-w-4xl">
+                <p className="whitespace-pre-wrap font-poppins text-[18px] leading-[1.55] text-[#4C383A] sm:text-[20px] lg:text-[22px]">
+                  {post.content}
+                </p>
+              </div>
+            )}
+
+            {post.media_url && (
+              <MediaAttachment
+                mediaUrl={post.media_url}
+                alt={`${post.anonymous_name || "Anonymous"} attachment`}
+                containerClassName="mt-6 max-w-3xl overflow-hidden rounded-[24px] bg-[#F4E8D5] p-4 shadow-[0_10px_28px_rgba(76,56,58,0.12)]"
+                imageClassName="max-h-[520px]"
+              />
+            )}
+
+            <div className="mt-8 flex flex-wrap items-center gap-5 text-[#4C383A]">
+              <span className="inline-flex min-w-[150px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-6 py-3 font-darumadropone text-[26px] leading-none text-[#4C383A] shadow-[0_8px_20px_rgba(140,151,188,0.35)]">
+                translate
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsReplyComposerOpen((current) => !current)}
+                className="border-0 bg-transparent p-0 text-[#4C383A] transition hover:text-[#2f2325]"
+                aria-label="Reply to post"
+              >
+                <LuMessageCircle className="text-[28px]" />
+              </button>
+              <span className="text-[28px]">
+                <LuHeart />
+              </span>
+              <span className="text-[28px]">
+                <LuBookmark />
+              </span>
+              <span className="text-[28px]">
+                <LuEllipsis />
+              </span>
+            </div>
+
+            {isReplyComposerOpen && (
+              <div className="mt-6 max-w-3xl rounded-[18px] bg-[#F4E8D5] p-4">
+                <ReplyInput
+                  onSubmit={async (payload) => {
+                    await handleReplySubmit(null, payload);
+                    setIsReplyComposerOpen(false);
+                  }}
+                  onCancel={() => setIsReplyComposerOpen(false)}
+                  placeholder="reply!"
+                  submitLabel="publish"
+                  rows={3}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            <ReplyThread
+              replies={replies}
+              onReplySubmit={handleReplySubmit}
+              formatTimestamp={formatTimestamp}
+              currentUsername={user?.username}
+            />
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}

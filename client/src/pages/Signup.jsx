@@ -72,8 +72,13 @@ export default function Signup() {
   // calls auth service and redirects on success
   const onSubmit = async (data) => {
     try {
-      await signUp(data.email, data.password);
-      navigate("/prompts");
+      await signUp({
+        email: data.email,
+        password: data.password,
+        location: data.location,
+        language: data.language,
+      });
+      navigate("/prompts", { replace: true });
     } catch (error) {
       setError("root", {
         type: "manual",
