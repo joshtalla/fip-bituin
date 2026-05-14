@@ -170,12 +170,12 @@ exports.checkPostExists = async (postId) => {
  * Resolve reply identity defaults from users table.
  *
  * @param {string} authUserId
- * @returns {Promise<{anonymous_name: string, language: string}>}
+ * @returns {Promise<{id: string, anonymous_name: string, language: string}>}
  */
 exports.getUserProfile = async (authUserId) => {
     const { data, error } = await supabase
         .from('users')
-        .select('username, language')
+        .select('id, username, language')
         .eq('auth_user_id', authUserId)
         .single();
 
@@ -188,6 +188,7 @@ exports.getUserProfile = async (authUserId) => {
     }
 
     return {
+        id: data.id,
         anonymous_name: data.username,
         language: data.language
     };

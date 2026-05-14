@@ -86,7 +86,7 @@ exports.createTopLevelReply = async (req, res) => {
         const userProfile = await replyService.getUserProfile(auth_user_id);
 
         const user = {
-            id: auth_user_id,
+            id: userProfile.id,
             anonymous_name: userProfile.anonymous_name,
             language: userProfile.language
         };
@@ -173,7 +173,7 @@ exports.createNestedReply = async (req, res) => {
         const userProfile = await replyService.getUserProfile(auth_user_id);
 
         const user = {
-            id: auth_user_id,
+            id: userProfile.id,
             anonymous_name: userProfile.anonymous_name,
             language: userProfile.language
         };
