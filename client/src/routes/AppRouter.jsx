@@ -7,6 +7,8 @@ import CreatePost from '../pages/CreatePost';
 import NotFound from '../pages/NotFound';
 import PostDetail from '../pages/PostDetail';
 import Profile from '../pages/Profile';
+import ChangePassword from '../pages/ChangePassword';
+import ChangeEmail from '../pages/ChangeEmail';
 import Explore from '../pages/Explore';
 import SavedPosts from '../pages/SavedPosts';
 import ProtectedRoute from './ProtectedRoute';
@@ -32,7 +34,11 @@ const AppRouter = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/prompt/:postId" element={<PostDetail />} />
           <Route path="/prompts/:postId" element={<PostDetail />} />
-          
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/change-password" element={<ChangePassword />} />
+          <Route path="/profile/change-email" element={<ChangeEmail />} />
+          <Route path="/profile/*" element={<Navigate to="/prompts" replace />} />
+          <Route path="/explore" element={<Navigate to="/prompts" replace />} />
         </Route>
 
         {/* Pages that render their own Navbar or don't need AppLayout */}
