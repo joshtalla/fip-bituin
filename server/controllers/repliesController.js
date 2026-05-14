@@ -49,18 +49,19 @@ function isValidUUID(uuid) {
  */
 exports.createTopLevelReply = async (req, res) => {
     const postId = req.params.postId;
-    const { content } = req.body || {};
+    const { content, media_url, media_type, media_width, media_height } = req.body || {};
+    const normalizedContent = typeof content === 'string' ? content.trim() : '';
 
     // 400: Invalid route param
     if (!isValidUUID(postId)) {
         return res.status(400).json({ message: 'Invalid field: postId (must be UUID)' });
     }
     // 400: Invalid or missing content
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
-        return res.status(400).json({ message: 'Invalid field: content (required and cannot be empty)' });
+    if (!normalizedContent && !media_url) {
+        return res.status(400).json({ message: 'Invalid field: content or media (one is required)' });
     }
     // 400: Length validation
-    if (content.length > 1000) {
+    if (normalizedContent.length > 1000) {
         return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
@@ -85,7 +86,7 @@ exports.createTopLevelReply = async (req, res) => {
         const userProfile = await replyService.getUserProfile(auth_user_id);
 
         const user = {
-            id: auth_user_id,
+            id: userProfile.id,
             anonymous_name: userProfile.anonymous_name,
             language: userProfile.language
         };
@@ -96,11 +97,20 @@ exports.createTopLevelReply = async (req, res) => {
         }
 
         // Delegate persistence/business logic to service
-        const reply = await replyService.createTopLevelReply(postId, user, content);
+        const reply = await replyService.createTopLevelReply(postId, user, normalizedContent, {
+            media_url,
+            media_type,
+            media_width,
+            media_height,
+        });
 
         // Respond with the created reply
         res.status(201).json(reply);
     } catch (err) {
+        if (err.status) {
+            return res.status(err.status).json({ message: err.message });
+        }
+
         console.error('Error creating reply:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -127,17 +137,18 @@ exports.createTopLevelReply = async (req, res) => {
  */
 exports.createNestedReply = async (req, res) => {
     const replyId = req.params.replyId;
-    const { content } = req.body || {};
+    const { content, media_url, media_type, media_width, media_height } = req.body || {};
+    const normalizedContent = typeof content === 'string' ? content.trim() : '';
 
     // 400: Invalid route param
     if (!isValidUUID(replyId)) {
         return res.status(400).json({ message: 'Invalid field: replyId (must be UUID)' });
     }
     // 400: Invalid or missing content
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
-        return res.status(400).json({ message: 'Invalid field: content (required and cannot be empty)' });
+    if (!normalizedContent && !media_url) {
+        return res.status(400).json({ message: 'Invalid field: content or media (one is required)' });
     }
-    if (content.length > 1000) {
+    if (normalizedContent.length > 1000) {
         return res.status(400).json({ message: 'Invalid field: content (must be under 1000 characters)' });
     }
 
@@ -162,7 +173,7 @@ exports.createNestedReply = async (req, res) => {
         const userProfile = await replyService.getUserProfile(auth_user_id);
 
         const user = {
-            id: auth_user_id,
+            id: userProfile.id,
             anonymous_name: userProfile.anonymous_name,
             language: userProfile.language
         };
@@ -178,12 +189,63 @@ exports.createNestedReply = async (req, res) => {
         }
 
         // Delegate persistence/business logic to service
-        const reply = await replyService.createNestedReply(parentReply, user, content);
+        const reply = await replyService.createNestedReply(parentReply, user, normalizedContent, {
+            media_url,
+            media_type,
+            media_width,
+            media_height,
+        });
 
         res.status(201).json(reply);
     } catch (err) {
+        if (err.status) {
+            return res.status(err.status).json({ message: err.message });
+        }
+
         console.error('Error creating nested reply:', err);
         res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+/**
+ * GET /api/users/me/replies
+ *
+ * Returns the authenticated user's replies, joined with their thread context
+ * (post + prompt). Powers the /profile/my-comments page so the user can see
+ * where each comment lives and click through to that thread.
+ *
+ * Query params:
+ *   - sort=asc|desc (default: desc)
+ *
+ * Returns:
+ *   200 with { replies }
+ *   401 if the bearer token is missing or invalid
+ *   500 for unexpected errors
+ */
+exports.getMyReplies = async (req, res) => {
+    try {
+        // 401: Auth resolution from Bearer token. Identical to the other endpoints.
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Unauthenticated: No auth token' });
+        }
+        const [scheme, token] = authHeader.split(' ');
+        if (scheme !== 'Bearer' || !token) {
+            return res.status(401).json({ message: 'Unauthenticated: Invalid authorization format' });
+        }
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data.user) {
+            return res.status(401).json({ message: 'Unauthenticated: Invalid token' });
+        }
+
+        const sort = req.query.sort === 'asc' ? 'asc' : 'desc';
+
+        const replies = await replyService.getRepliesForAuthUser(data.user.id, { sort });
+
+        return res.status(200).json({ replies });
+    } catch (err) {
+        console.error('Error fetching my replies:', err);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 };
 

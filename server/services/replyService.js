@@ -21,6 +21,7 @@
  */
 
 const supabase = require('../supabaseClient');
+const { normalizeMediaPayload } = require('./postService');
 
 /**
  * Create a top-level reply.
@@ -30,9 +31,10 @@ const supabase = require('../supabaseClient');
  * @param {string} content
  * @returns {Promise<object>} Public reply shape.
  */
-exports.createTopLevelReply = async (postId, user, content) => {
+exports.createTopLevelReply = async (postId, user, content, media) => {
     // Content safety filtering: Check if content contains email or phone number and flag it if so
     const isFlagged = containsEmailOrPhone(content);
+    const mediaPayload = normalizeMediaPayload(media);
 
     // Insert reply row and fetch inserted data
     const { data, error } = await supabase
@@ -44,9 +46,10 @@ exports.createTopLevelReply = async (postId, user, content) => {
             anonymous_name: user.anonymous_name,
             content: content.trim(),
             language: user.language,
-            is_flagged: isFlagged
+            is_flagged: isFlagged,
+            ...mediaPayload,
         }])
-        .select('id, post_id, parent_reply_id, anonymous_name, content, language, is_flagged, user_id, created_at')
+        .select('id, post_id, parent_reply_id, anonymous_name, content, language, media_url, media_type, media_width, media_height, is_flagged, user_id, created_at')
         .single();
 
     if (error) {
@@ -76,9 +79,10 @@ exports.createTopLevelReply = async (postId, user, content) => {
  * @returns {Promise<object>} Public reply shape.
  */
 
-exports.createNestedReply = async (parentReply, user, content) => {
+exports.createNestedReply = async (parentReply, user, content, media) => {
     // Content safety flagging
     const isFlagged = containsEmailOrPhone(content);
+    const mediaPayload = normalizeMediaPayload(media);
 
     const { data, error } = await supabase
         .from('replies')
@@ -89,9 +93,10 @@ exports.createNestedReply = async (parentReply, user, content) => {
             anonymous_name: user.anonymous_name,
             content: content.trim(),
             language: user.language,
-            is_flagged: isFlagged
+            is_flagged: isFlagged,
+            ...mediaPayload,
         }])
-        .select('id, post_id, parent_reply_id, anonymous_name, content, language, is_flagged, user_id, created_at')
+        .select('id, post_id, parent_reply_id, anonymous_name, content, language, media_url, media_type, media_width, media_height, is_flagged, user_id, created_at')
         .single();
 
     if (error) {
@@ -126,7 +131,7 @@ exports.getRepliesForPost = async (postId, page = 1, limit = 20) => {
     // Fetch replies for the given postId, ordered by created_at ASC, with pagination support
     const { data, error, count } = await supabase
         .from('replies')
-        .select('id, post_id, parent_reply_id, anonymous_name, content, language, created_at', { count: 'exact' })
+        .select('id, post_id, parent_reply_id, anonymous_name, content, language, media_url, media_type, media_width, media_height, created_at', { count: 'exact' })
         .eq('post_id', postId)
         .order('created_at', { ascending: true })
         .range(from, to);
@@ -162,15 +167,93 @@ exports.checkPostExists = async (postId) => {
 };
 
 /**
+ * Fetch every reply authored by the authenticated user, with thread context.
+ *
+ * Joins each reply with its parent post (and the post's prompt) so the client
+ * can show the user where the conversation lives without an extra round-trip.
+ *
+ * @param {string} authUserId - Supabase auth user id (auth.users.id).
+ * @param {{ sort?: 'asc' | 'desc' }} [options]
+ * @returns {Promise<object[]>} Array of replies with embedded post + prompt.
+ */
+exports.getRepliesForAuthUser = async (authUserId, { sort = 'desc' } = {}) => {
+    // Resolve the users.id for this auth user. The replies table stores user_id
+    // pointing at users.id, not at auth.users.id directly.
+    const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUserId)
+        .maybeSingle();
+
+    if (profileError) {
+        throw profileError;
+    }
+
+    if (!profile) {
+        // The user is authenticated but has no profile row yet - there can't be
+        // any replies to return. This is not an error case for the client.
+        return [];
+    }
+
+    const ascending = sort === 'asc';
+
+    const { data, error } = await supabase
+        .from('replies')
+        .select(
+            `id, post_id, parent_reply_id, anonymous_name, content, language,
+             media_url, media_type, media_width, media_height, created_at,
+             posts:post_id ( id, prompt_id, anonymous_name, content,
+                             prompts:prompt_id ( id, title, prompt_text ) )`
+        )
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending });
+
+    if (error) {
+        throw error;
+    }
+
+    // Shape the response so the client receives a flat thread context object
+    // alongside each reply rather than nested supabase relation objects.
+    return (data || []).map((reply) => {
+        const post = reply.posts || null;
+        const prompt = post?.prompts || null;
+
+        return {
+            id: reply.id,
+            post_id: reply.post_id,
+            parent_reply_id: reply.parent_reply_id,
+            anonymous_name: reply.anonymous_name,
+            content: reply.content,
+            language: reply.language,
+            media_url: reply.media_url,
+            media_type: reply.media_type,
+            media_width: reply.media_width,
+            media_height: reply.media_height,
+            created_at: reply.created_at,
+            thread: post
+                ? {
+                      post_id: post.id,
+                      post_excerpt: post.content,
+                      post_author: post.anonymous_name,
+                      prompt_id: prompt?.id || null,
+                      prompt_title: prompt?.title || null,
+                      prompt_text: prompt?.prompt_text || null,
+                  }
+                : null,
+        };
+    });
+};
+
+/**
  * Resolve reply identity defaults from users table.
  *
  * @param {string} authUserId
- * @returns {Promise<{anonymous_name: string, language: string}>}
+ * @returns {Promise<{id: string, anonymous_name: string, language: string}>}
  */
 exports.getUserProfile = async (authUserId) => {
     const { data, error } = await supabase
         .from('users')
-        .select('username, language')
+        .select('id, username, language')
         .eq('auth_user_id', authUserId)
         .single();
 
@@ -183,6 +266,7 @@ exports.getUserProfile = async (authUserId) => {
     }
 
     return {
+        id: data.id,
         anonymous_name: data.username,
         language: data.language
     };

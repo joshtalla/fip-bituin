@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
 import Stars from '../components/Stars'
 import { supabase } from '../services/supabaseClient'
 
@@ -83,7 +82,7 @@ const constellations = [
     },
 ]
 
-const ConstellationNode = ({ label, x, y, onClick, dots, lines }) => {
+const ConstellationNode = ({ label, x, y, onClick, dots, lines, nodeRef }) => {
     const [hovered, setHovered] = useState(false)
   
     return (
@@ -134,6 +133,25 @@ const Profile = () => {
   const [fading, setFading] = useState(false)
   const [username, setUsername] = useState('')
 
+  const [greetingVisible, setGreetingVisible] = useState(false)
+  const [globeVisible, setGlobeVisible] = useState(false)
+  const [buttonVisible, setButtonVisible] = useState(false)
+  const [fadingOut, setFadingOut] = useState(false)
+
+  // Disable scroll bar and function when entering page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => setGreetingVisible(true), 100)
+    setTimeout(() => setGlobeVisible(true), 350)
+    setTimeout(() => setButtonVisible(true), 600)
+  }, [])
+
   useEffect(() => {
     const fetchUsername = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -149,12 +167,19 @@ const Profile = () => {
     if (data) setUsername(data.username)
     }
     fetchUsername()
-  }, [])
+  }, [navigate])
 
-  const handleConstellationClick = (route) => {
+  const fadeStyle = (visible) => ({
+    opacity: visible ? 1 : 0,
+    transition: 'opacity 0.4s ease',
+    pointerEvents: fadingOut ? 'none' : 'auto',
+  })
+
+  const handleConstellationClick = (c) => {
     setFading(true)
+
     setTimeout(() => {
-      navigate(route)
+      navigate(c.route, {state: {constellation: c}})
     }, 400)
   }
 
@@ -164,15 +189,10 @@ const Profile = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #07133B, #682B1D)',
-      position: 'relative',
-      overflow: 'hidden',
       opacity: fading ? 0 : 1,
       transition: 'opacity 0.4s ease',
     }}>
       <Stars />
-      <Navbar />
 
       {/* Main content */}
       <div style={{
@@ -181,37 +201,37 @@ const Profile = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minHeight: '100vh',
-        padding: '80px 0 40px 0',
+        padding: '0px 0 40px 0',
         boxSizing: 'border-box',
       }}>
 
         {/* Greeting */}
-        <h1 style={{
-          color: '#FFFFFF',
-          fontFamily: 'Poppins, sans-serif',
-          fontSize: '34px',
-          fontWeight: '600',
-          margin: 0,
-          textAlign: 'center',
-        }}>
-          kamusta ka, {username}!
-        </h1>
+        <div style={fadeStyle(greetingVisible)}>
+          <h1 style={{
+            color: '#FFFFFF',
+            fontFamily: 'Poppins, sans-serif',
+            fontSize: '34px',
+            fontWeight: '600',
+            margin: 0,
+            textAlign: 'center',
+          }}>
+            kamusta ka, {username}!
+          </h1>
+          {/* Subheading */}
+          <p style={{
+            color: '#FFFFFF',
+            fontFamily: 'Poppins, sans-serif',
+            fontSize: '30px',
+            fontWeight: '500',
+            margin: '8px 0 0 0',
+            textAlign: 'center',
+          }}>
+            interact with your profile below:
+          </p>
+        </div>
 
-        {/* Subheading */}
-        <p style={{
-          color: '#FFFFFF',
-          fontFamily: 'Poppins, sans-serif',
-          fontSize: '30px',
-          fontWeight: '500',
-          margin: '8px 0 0 0',
-          textAlign: 'center',
-        }}>
-          interact with your profile below:
-        </p>
-
-        {/* Globe circle */}
-        <div style={{
+        {/* Globe Circle */}
+        <div style={{...fadeStyle(globeVisible),
         position: 'relative',
         width: '600px',
         height: '600px',
@@ -229,13 +249,14 @@ const Profile = () => {
             y={c.y}
             dots={c.dots}
             lines={c.lines}
-            onClick={() => handleConstellationClick(c.route)}
+            nodeRef={(el) => (nodeRefs.current[c.label] = el)}
+            onClick={() => handleConstellationClick(c)}
         />
         ))}
         </div>
 
         {/* Log out button */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div style={{...fadeStyle(buttonVisible), width: '100%', display: 'flex', justifyContent: 'center', paddingTop: '30px' }}>
           <button
             onClick={() => setShowLogoutModal(true)}
             style={{
@@ -250,6 +271,9 @@ const Profile = () => {
               height: '51px',
               cursor: 'pointer',
               boxShadow: '2px 2px 4px rgba(0,0,0,0.25)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
             log out

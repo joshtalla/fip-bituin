@@ -1,14 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { fetchJson } from '../services/api'
+import Navbar from './Navbar'
+import MediaPicker from './MediaPicker'
+import { clearLocalMediaDraft, createLocalMediaDraft, uploadMedia } from '../services/mediaService'
 
 function CreatePostForm({ promptId, promptText }) {
   const navigate = useNavigate()
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [selectedMedia, setSelectedMedia] = useState(null)
+  const [mediaError, setMediaError] = useState('')
   const MAX = 1000
+
+  useEffect(() => () => {
+    clearLocalMediaDraft(selectedMedia)
+  }, [selectedMedia])
+
+  const handleMediaSelect = async (file) => {
+    try {
+      const mediaDraft = await createLocalMediaDraft(file)
+      setMediaError('')
+      setError(null)
+      setSelectedMedia(mediaDraft)
+    } catch (selectionError) {
+      setMediaError(selectionError.message || 'Unable to attach media.')
+    }
+  }
+
+  const clearSelectedMedia = () => {
+    setMediaError('')
+    setSelectedMedia(null)
+  }
 
   const handlePublish = async () => {
     setLoading(true)
@@ -20,6 +45,13 @@ function CreatePostForm({ promptId, promptText }) {
       const accessToken = session?.access_token
       if (!accessToken) throw new Error('Not authenticated')
 
+      const mediaPayload = selectedMedia
+        ? await uploadMedia({
+            media: selectedMedia,
+            authUserId: session.user.id,
+          })
+        : {}
+
       const data = await fetchJson('/api/posts', {
         method: 'POST',
         headers: {
@@ -28,7 +60,8 @@ function CreatePostForm({ promptId, promptText }) {
         },
         body: JSON.stringify({
           prompt_id: promptId,
-          content: content,
+          content: content.trim(),
+          ...mediaPayload,
         })
       })
       navigate(`/prompts/${data.id}`)
@@ -39,7 +72,8 @@ function CreatePostForm({ promptId, promptText }) {
     }
   }
 
-  const publishDisabled = !promptId || content.length === 0 || content.length > MAX || loading
+  const trimmedContent = content.trim()
+  const publishDisabled = !promptId || (!trimmedContent && !selectedMedia) || content.length > MAX || loading
 
   return (
     <div style={{
@@ -48,21 +82,7 @@ function CreatePostForm({ promptId, promptText }) {
       display: 'flex',
       flexDirection: 'column',
     }}>
-
-      {/* Navbar */}
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '24px 60px',
-      }}>
-        <span style={{ color: '#E8A020', fontSize: '64px', fontFamily: 'Darumadrop One', fontWeight: '400' }}>bituin.</span>
-        <div style={{ display: 'flex', gap: '32px', color: 'white', fontSize: '24px', fontFamily: 'Poppins', fontWeight: '500' }}>
-          <span>profile</span>
-          <span>explore</span>
-          <span>search</span>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Page content */}
       <div style={{
@@ -135,26 +155,15 @@ function CreatePostForm({ promptId, promptText }) {
                 color: '#333',
               }}
             />
-            {/* Add media button — inside textarea bottom-right */}
-            <button
-              style={{
-                position: 'absolute',
-                bottom: '12px',
-                right: '12px',
-                background: '#5a4a5a',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                cursor: 'pointer',
-                fontFamily: 'Darumadrop One',
-                fontSize: '24px',
-                fontWeight: '400',
-              }}
-            >
-              add media
-            </button>
           </div>
+
+          <MediaPicker
+            media={selectedMedia}
+            error={mediaError}
+            onSelect={handleMediaSelect}
+            onRemove={clearSelectedMedia}
+            disabled={loading}
+          />
 
           {/* Character count */}
           <div style={{ textAlign: 'right', fontSize: '13px', color: content.length > MAX ? 'red' : '#888' }}>

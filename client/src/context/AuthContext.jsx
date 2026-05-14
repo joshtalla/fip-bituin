@@ -135,7 +135,11 @@ export const AuthProvider = ({ children }) => {
                 .eq('auth_user_id', sessionUser.id)
                 .maybeSingle();
 
-            if (error && error.code === 'PGRST116') {
+            if (error) {
+                throw error;
+            }
+
+            if (!data || !data.username) {
                 const createdProfile = await ensureUserProfile({
                     authUserId: sessionUser.id,
                     email: sessionUser.email,
@@ -150,8 +154,6 @@ export const AuthProvider = ({ children }) => {
                     email: sessionUser.email,
                     isProfileIncomplete: false,
                 });
-            } else if (error) {
-                throw error;
             } else {
                 // Save the profile so the app can access it.
                 setUser({
