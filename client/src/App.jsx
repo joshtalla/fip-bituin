@@ -5,7 +5,7 @@ import './App.css';
 function App() {
   return (
     <>
-      <Stars count={1000} />
+      <Stars /> 
       <div className="app-shell">
         <AppRouter />
       </div>

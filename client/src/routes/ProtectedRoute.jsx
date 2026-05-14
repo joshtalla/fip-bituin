@@ -6,6 +6,10 @@ export default function ProtectedRoute({ requireAuth = true, redirectTo, childre
 	const { user, loading } = useContext(AuthContext);
 	const location = useLocation();
 
+    // 🚧 DEV MODE BYPASS 🚧
+    // Uncomment the line below to temporarily ignore authentication so you can test the UI!
+    // return children || <Outlet />;
+
 	if (loading) {
 		return (
 			<div className="flex min-h-screen items-center justify-center text-center font-poppins text-xl text-[#FFFCEF]">
