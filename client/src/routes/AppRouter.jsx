@@ -35,6 +35,7 @@ const AppRouter = () => {
           <Route path="/prompts" element={<PromptBoard />} />
           <Route path="/search" element={<Search />} />
           <Route path="/prompt/:postId" element={<PostDetail />} />
+          <Route path="/prompts/:postId" element={<PostDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/my-comments" element={<MyComments />} />
           <Route path="/profile/change-location" element={<NotFound />} />
