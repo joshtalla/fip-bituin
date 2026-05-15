@@ -10,6 +10,7 @@ import Profile from '../pages/Profile';
 import ProtectedRoute from './ProtectedRoute';
 import AppLayout from './AppLayout';
 import MyComments from '../pages/MyComments';
+import ChangeLocation from '../pages/ChangeLocation';
 
 const AppRouter = () => {
   return (
@@ -31,7 +32,7 @@ const AppRouter = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/my-comments" element={<MyComments />} />
           <Route path="/profile/saved-posts" element={<NotFound />} />
-          <Route path="/profile/change-location" element={<NotFound />} />
+          <Route path="/profile/change-location" element={<ChangeLocation />} />
           <Route path="/profile/change-language" element={<NotFound />} />
           <Route path="/profile/my-posts" element={<NotFound />} />
           <Route path="/profile/change-password" element={<NotFound />} />
