@@ -151,3 +151,28 @@ export const signOut = async () => {
     throw error;
   }
 };
+
+export const updateUserLanguage = async ({ authUserId, language }) => {
+  if (!authUserId) {
+    throw new Error("Authenticated user is required");
+  }
+
+  const normalizedLanguage = typeof language === "string" ? language.trim() : "";
+
+  if (!normalizedLanguage) {
+    throw new Error("Language is required");
+  }
+
+  const { data, error } = await supabase
+    .from("users")
+    .update({ language: normalizedLanguage })
+    .eq("auth_user_id", authUserId)
+    .select("id, username, country, language, auth_user_id")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};

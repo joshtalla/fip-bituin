@@ -1,10 +1,9 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/auth-context'
-import { supabase } from '../services/supabaseClient'
-import { fetchJson } from '../services/api'
 import MyCommentCard from '../components/MyCommentCard'
 import ProfileNavBar from '../components/ProfileNavBar'
+import { getMyReplies } from '../services/replyService'
 
 /**
  * MyComments
@@ -50,19 +49,7 @@ const MyComments = () => {
             setError(null)
 
             try {
-                const { data: { session } } = await supabase.auth.getSession()
-                if (!session?.access_token) {
-                    throw new Error('Your session expired. Please sign in again.')
-                }
-
-                const response = await fetchJson(
-                    `/api/users/me/replies?sort=${sortOrder}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${session.access_token}`,
-                        },
-                    },
-                )
+                const response = await getMyReplies(sortOrder)
 
                 if (!cancelled) {
                     setComments(response?.replies || [])

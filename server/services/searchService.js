@@ -1,42 +1,28 @@
-const prisma = require("../prisma");
+const supabase = require("../supabaseClient");
 
 const searchPostsService = async ({ query, page, limit }) => {
+  const normalizedQuery = String(query || "").trim();
   const skip = (page - 1) * limit;
+  const from = skip;
+  const to = skip + limit - 1;
 
-  const whereClause = {
-    content: {
-      contains: query,
-      mode: "insensitive",
-    },
-  };
+  const { data: posts, error, count } = await supabase
+    .from("posts")
+    .select("id, content, anonymous_name, created_at", { count: "exact" })
+    .ilike("content", `%${normalizedQuery}%`)
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-  const [posts, total] = await Promise.all([
-    prisma.posts.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
-      orderBy: {
-        created_at: "desc",
-      },
-      select: {
-        id: true,
-        content: true,
-        anonymous_name: true,
-        created_at: true,
-      },
-    }),
-
-    prisma.posts.count({
-      where: whereClause,
-    }),
-  ]);
+  if (error) {
+    throw error;
+  }
 
   return {
-    results: posts,
-    total,
+    results: posts || [],
+    total: count || 0,
     page,
     limit,
-    query,
+    query: normalizedQuery,
   };
 };
 

@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { CgProfile } from "react-icons/cg";
-import { IoLocationOutline } from "react-icons/io5";
 import { LuMaximize2 } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import MediaAttachment from "./MediaAttachment";
@@ -20,7 +19,6 @@ const verticalClasses = {
 function PostPreview({
   postId,
   username,
-  country,
   content,
   mediaUrl,
   mediaWidth,
@@ -28,7 +26,6 @@ function PostPreview({
   placement = "center",
   verticalAlign = "above",
 }) {
-  const locationLabel = country || "location, country";
   const vertical = verticalClasses[verticalAlign] ?? verticalClasses.above;
   const trimmedContent = content?.trim() || "";
   const shouldShowPreviewMedia =
@@ -46,22 +43,13 @@ function PostPreview({
     >
       <div className="flex max-h-[360px] flex-col gap-5 px-8 py-7">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-1 items-center gap-6">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4C383A] text-[#FBF3E5]">
-                <CgProfile className="text-[28px]" />
-              </div>
-              <h2 className="m-0 truncate font-poppins text-[22px] leading-none font-semibold text-[#332528]">
-                {username}
-              </h2>
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4C383A] text-[#FBF3E5]">
+              <CgProfile className="text-[28px]" />
             </div>
-
-            <div className="flex min-w-0 items-center gap-2 text-[#4C383A]">
-              <IoLocationOutline className="shrink-0 text-[30px]" />
-              <p className="m-0 truncate font-poppins text-[18px] leading-none font-medium text-[#4C383A]">
-                {locationLabel}
-              </p>
-            </div>
+            <h2 className="m-0 truncate font-poppins text-[22px] leading-none font-semibold text-[#332528]">
+              {username}
+            </h2>
           </div>
 
           <Link

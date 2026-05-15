@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PromptStarIcon } from './StarPost'
 
 /**
  * MyCommentCard
@@ -67,13 +68,8 @@ const MyCommentCard = ({ comment, onSelect }) => {
             onClick={handleClick}
             onKeyDown={handleKeyDown}
         >
-            {/* The star itself - 92x92 per Figma. */}
-            <svg
-                width="92"
-                height="92"
-                viewBox="0 0 92 92"
+            <div
                 style={{
-                    cursor: 'pointer',
                     filter: hovered
                         ? 'brightness(1.15) drop-shadow(0 4px 12px rgba(239,183,88,0.45))'
                         : 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))',
@@ -81,11 +77,11 @@ const MyCommentCard = ({ comment, onSelect }) => {
                     display: 'block',
                 }}
             >
-                <polygon
-                    points="46,5 57,35 90,35 64,55 74,85 46,65 18,85 28,55 2,35 35,35"
-                    fill="#EFB758"
+                <PromptStarIcon
+                    alt="Open comment thread"
+                    className="h-20 w-20 cursor-pointer sm:h-24 sm:w-24"
                 />
-            </svg>
+            </div>
 
             {/* Hover overlay: 300ms dissolve, ease out, per Figma interaction. */}
             <div

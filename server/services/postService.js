@@ -191,6 +191,7 @@ const getPostsByPrompt = async (promptId, page = 1, limit = 18) => {
     .from('posts')
     .select(POST_LIST_COLUMNS)
     .eq('prompt_id', promptId)
+    .order('likes_count', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -202,6 +203,114 @@ const getPostsByPrompt = async (promptId, page = 1, limit = 18) => {
     posts,
     hasMore: data.length > limit,
   };
+};
+
+const getPostsForAuthUser = async (authUserId, page = 1, limit = 10) => {
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+
+  if (profileError) {
+    throw profileError;
+  }
+
+  if (!profile) {
+    return {
+      posts: [],
+      total: 0,
+      page,
+      limit,
+    };
+  }
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from('posts')
+    .select(POST_LIST_COLUMNS, { count: 'exact' })
+    .eq('user_id', profile.id)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    posts: data || [],
+    total: count || 0,
+    page,
+    limit,
+  };
+};
+
+const likePostById = async (postId) => {
+  const { data: post, error } = await supabase
+    .from('posts')
+    .select('id, likes_count')
+    .eq('id', postId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!post) {
+    return {
+      error: 'POST_NOT_FOUND',
+    };
+  }
+
+  const nextLikesCount = (post.likes_count ?? 0) + 1;
+
+  const { data: updatedPost, error: updateError } = await supabase
+    .from('posts')
+    .update({ likes_count: nextLikesCount })
+    .eq('id', postId)
+    .select('id, likes_count')
+    .single();
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  return updatedPost;
+};
+
+const unlikePostById = async (postId) => {
+  const { data: post, error } = await supabase
+    .from('posts')
+    .select('id, likes_count')
+    .eq('id', postId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!post) {
+    return {
+      error: 'POST_NOT_FOUND',
+    };
+  }
+
+  const nextLikesCount = Math.max((post.likes_count ?? 0) - 1, 0);
+
+  const { data: updatedPost, error: updateError } = await supabase
+    .from('posts')
+    .update({ likes_count: nextLikesCount })
+    .eq('id', postId)
+    .select('id, likes_count')
+    .single();
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  return updatedPost;
 };
 
 const getPostById = async (postId) => {
@@ -269,4 +378,12 @@ const insertPost = async ({ prompt_id, content, authUser, media }) => {
   return data;
 };
 
-module.exports = { getPostsByPrompt, getPostById, insertPost, normalizeMediaPayload };
+module.exports = {
+  getPostsByPrompt,
+  getPostsForAuthUser,
+  getPostById,
+  insertPost,
+  likePostById,
+  unlikePostById,
+  normalizeMediaPayload,
+};

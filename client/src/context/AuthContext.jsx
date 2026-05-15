@@ -179,7 +179,7 @@ export const AuthProvider = ({ children }) => {
 
     // Share the user and loading state with all child components.
     return (
-        <AuthContext.Provider value={{ user, loading }}>
+        <AuthContext.Provider value={{ user, loading, setUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { CgProfile } from "react-icons/cg";
-import { IoCloseOutline, IoLocationOutline } from "react-icons/io5";
+import { IoCloseOutline } from "react-icons/io5";
 import {
   LuBookmark,
   LuEllipsis,
@@ -14,6 +14,7 @@ import ReplyThread from "../components/ReplyThread";
 import { fetchJson, translatePost } from "../services/api";
 import MediaAttachment from "../components/MediaAttachment";
 import { uploadMedia } from "../services/mediaService";
+import { isPostLiked, likePost, unlikePost } from "../services/postLikeService";
 import { supabase } from "../services/supabaseClient";
 import { savePost, unsavePost } from "../services/savedPostService";
 
@@ -48,6 +49,8 @@ export default function PostDetail() {
   const [error, setError] = useState(null);
   const [isReplyComposerOpen, setIsReplyComposerOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -84,6 +87,66 @@ export default function PostDetail() {
       setIsSaving(false);
     }
   };
+
+  const handleLikeToggle = async () => {
+    if (!post || isLiking) return;
+
+    const previousLikedState = isLiked;
+    const previousLikesCount = post.likes_count ?? 0;
+    const nextLikedState = !isLiked;
+    const nextLikesCount = nextLikedState
+      ? previousLikesCount + 1
+      : Math.max(previousLikesCount - 1, 0);
+
+    setIsLiked(nextLikedState);
+    setIsLiking(true);
+    setPost((currentPost) => {
+      if (!currentPost) {
+        return currentPost;
+      }
+
+      return {
+        ...currentPost,
+        likes_count: nextLikesCount,
+      };
+    });
+
+    try {
+      const result = nextLikedState
+        ? await likePost(post.id)
+        : await unlikePost(post.id);
+
+      setPost((currentPost) => {
+        if (!currentPost) {
+          return currentPost;
+        }
+
+        return {
+          ...currentPost,
+          likes_count: result.likes_count ?? nextLikesCount,
+        };
+      });
+    } catch (err) {
+      setIsLiked(previousLikedState);
+      setPost((currentPost) => {
+        if (!currentPost) {
+          return currentPost;
+        }
+
+        return {
+          ...currentPost,
+          likes_count: previousLikesCount,
+        };
+      });
+      alert("Failed to update like. Please try again.");
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsLiked(isPostLiked(postId));
+  }, [postId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,10 +262,6 @@ export default function PostDetail() {
               <p className="font-poppins text-[24px] font-semibold leading-none sm:text-[28px]">
                 {post.anonymous_name || "username"}
               </p>
-              <span className="inline-flex items-center gap-2 font-poppins text-[22px] font-medium leading-none text-[#4C383A] sm:text-[24px]">
-                <IoLocationOutline className="text-[24px] sm:text-[26px]" />
-                {post.country || "location, country"}
-              </span>
             </div>
 
             {post.content && (
@@ -240,9 +299,21 @@ export default function PostDetail() {
               >
                 <LuMessageCircle className="text-[28px]" />
               </button>
-              <span className="text-[28px]">
-                <LuHeart />
-              </span>
+              <button
+                type="button"
+                onClick={handleLikeToggle}
+                disabled={isLiking}
+                className="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-[#4C383A] transition hover:text-[#2f2325] disabled:opacity-60"
+                aria-label={isLiked ? "Unlike post" : "Like post"}
+              >
+                <LuHeart
+                  className="text-[28px]"
+                  fill={isLiked ? "currentColor" : "none"}
+                />
+                <span className="font-poppins text-[16px] font-medium sm:text-[18px]">
+                  {post.likes_count ?? 0}
+                </span>
+              </button>
               <button
                 type="button"
                 onClick={handleSaveToggle}

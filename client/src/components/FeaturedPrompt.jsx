@@ -1,21 +1,6 @@
 import { useEffect, useState } from "react";
-import { CiSearch } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
-
-// TODO: Add search functionality to the search bar
-// Search bar that appears when the user selects to show the search bar on nav
-function SearchBar() {
-  return (
-    <div className="flex h-[42px] w-full items-center rounded-full border border-[#D9D9D9] bg-[#FBF3E5] px-4 sm:w-[442px]">
-      <input
-        type="text"
-        placeholder="enter a word or phrase!"
-        className="flex-1 font-poppins text-[16px] font-semibold text-[#765C5F] outline-none"
-      />
-      <CiSearch className="text-[24px] text-[#765C5F]" />
-    </div>
-  );
-}
+import SearchBar from "./SearchBar";
 
 // Card that appears and disappears to hint the user to hover over a star to view a post
 function HintCard({ visible }) {
@@ -54,6 +39,7 @@ export default function FeaturedPrompt({
 }) {
   const navigate = useNavigate();
   const [showHint, setShowHint] = useState(true);
+  const [query, setQuery] = useState("");
 
   // Navigate to the create post page by passing the prompt id and prompt text to the create post page
   const handleCTAClick = () => {
@@ -64,6 +50,10 @@ export default function FeaturedPrompt({
         promptText: dailyPrompt?.prompt_text,
       },
     });
+  };
+
+  const handleSearch = (submittedQuery) => {
+    navigate(`/explore?q=${encodeURIComponent(submittedQuery)}`);
   };
 
   // Hide the hint card after 5 seconds
@@ -86,7 +76,16 @@ export default function FeaturedPrompt({
         </div>
         {showSearchBar && (
           <div className="order-1 mb-4 w-full sm:order-2 sm:mb-0 sm:w-auto">
-            <SearchBar />
+            <SearchBar
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onSearch={handleSearch}
+              placeholder="enter a word or phrase!"
+              autoFocus
+              formClassName="flex h-[42px] w-full items-center rounded-full border border-[#D9D9D9] bg-[#FBF3E5] px-4 sm:w-[442px]"
+              inputClassName="flex-1 bg-transparent font-poppins text-[16px] font-semibold text-[#765C5F] outline-none"
+              buttonClassName="text-[24px] text-[#765C5F]"
+            />
           </div>
         )}
       </div>

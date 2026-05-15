@@ -241,7 +241,6 @@ const Profile = () => {
             y={c.y}
             dots={c.dots}
             lines={c.lines}
-            nodeRef={(el) => (nodeRefs.current[c.label] = el)}
             onClick={() => handleConstellationClick(c)}
         />
         ))}

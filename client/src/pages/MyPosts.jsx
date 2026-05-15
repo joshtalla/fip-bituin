@@ -2,14 +2,25 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Stars from '../components/Stars';
-import { mockPosts } from '../mocks/mockData';
+import { getMyPosts } from '../services/postService';
 
-// Temporary mock function for fetching "My Posts"
-const fetchMyPosts = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // Return a subset of mock posts to simulate the user's own posts
-  return mockPosts.slice(0, 4); 
-};
+function formatPostDate(value) {
+  if (!value) {
+    return 'Posted recently';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Posted recently';
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
 
 export default function MyPosts() {
   const navigate = useNavigate();
@@ -21,9 +32,9 @@ export default function MyPosts() {
     const loadPosts = async () => {
       try {
         setIsLoading(true);
-        // TODO: Replace with real API call using Supabase auth token
-        const userPosts = await fetchMyPosts();
-        setPosts(userPosts);
+        setError(null);
+        const response = await getMyPosts();
+        setPosts(response.posts || []);
       } catch (err) {
         setError("Failed to load your posts. Please try again.");
       } finally {
@@ -130,8 +141,7 @@ export default function MyPosts() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <span style={{ color: '#888', fontFamily: 'Poppins, sans-serif', fontSize: '14px' }}>
-                  {/* Fake Date since mockData doesn't have it */}
-                  Posted recently
+                  {formatPostDate(post.created_at)}
                 </span>
                 <span style={{ color: '#EFB758', fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 'bold' }}>
                   {post.likes_count} likes

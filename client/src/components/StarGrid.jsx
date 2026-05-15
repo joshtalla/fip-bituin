@@ -189,7 +189,6 @@ export default function StarGrid({ promptId }) {
                 <PostPreview
                   postId={post.id}
                   username={post.anonymous_name}
-                  country={post.country}
                   content={post.content}
                   mediaUrl={post.media_url}
                   mediaWidth={post.media_width}
