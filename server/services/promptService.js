@@ -47,7 +47,7 @@ const getTodayPrompt = async () => {
 const getPromptById = async (id) => {
   const { data, error } = await supabase
     .from("prompts")
-  .select(PROMPT_COLUMNS)
+    .select(PROMPT_COLUMNS)
     .eq("id", id)
     .single();
 
@@ -65,7 +65,7 @@ const getPromptById = async (id) => {
 const getPromptByDate = async (date) => {
   const { data, error } = await supabase
     .from("prompts")
-  .select(PROMPT_COLUMNS)
+    .select(PROMPT_COLUMNS)
     .eq("prompt_date", date)
     .single();
 
@@ -202,7 +202,7 @@ const getPromptBoard = async (id, { sort, page, limit }) => {
   } = await supabase
     .from("posts")
     .select(
-      "id, prompt_id, anonymous_name, content, category, language, country, likes_count, reply_count, created_at", // Select the columns we want to return
+      "id, prompt_id, anonymous_name, content, category, language, country, likes_count, reply_count, created_at, media_url, media_width, media_height", // Select the columns we want to return
       {
         count: "exact", // Count the number of posts for the specific prompt (exact count)
       },
