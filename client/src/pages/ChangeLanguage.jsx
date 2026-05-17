@@ -2,17 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/auth-context'
 import { updateUserLanguage } from '../services/authService'
-
-const LANGUAGE_OPTIONS = [
-  'English',
-  'French',
-  'Filipino',
-  'Tagalog',
-  'Cebuano',
-  'Ilocano',
-  'Kapampangan',
-  'Waray',
-]
+import { LANGUAGE_OPTIONS, normalizeLanguageCode } from '../utils/language'
 
 const ConstellationHeader = ({ constellation }) => {
   if (!constellation) return null
@@ -60,7 +50,7 @@ function ChangeLanguage() {
   const navigate = useNavigate()
   const { user, loading: authLoading, setUser } = useContext(AuthContext)
 
-  const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGE_OPTIONS[0])
+  const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGE_OPTIONS[0].value)
   const [constellationVisible, setConstellationVisible] = useState(false)
   const [inputsVisible, setInputsVisible] = useState(false)
   const [fadingOut, setFadingOut] = useState(false)
@@ -78,8 +68,10 @@ function ChangeLanguage() {
       return
     }
 
-    if (user?.language?.trim()) {
-      setSelectedLanguage(user.language)
+    const normalizedLanguage = normalizeLanguageCode(user?.language)
+
+    if (normalizedLanguage) {
+      setSelectedLanguage(normalizedLanguage)
     }
   }, [authLoading, user])
 
@@ -95,10 +87,6 @@ function ChangeLanguage() {
     transition: 'opacity 0.4s ease',
     pointerEvents: fadingOut ? 'none' : 'auto',
   })
-
-  const availableLanguages = user?.language && !LANGUAGE_OPTIONS.includes(user.language)
-    ? [user.language, ...LANGUAGE_OPTIONS]
-    : LANGUAGE_OPTIONS
 
   const handleSave = async () => {
     if (!user?.authUserId || isSaving) {
@@ -184,9 +172,9 @@ function ChangeLanguage() {
             lineHeight: 'normal',
           }}
         >
-          {availableLanguages.map((language) => (
-            <option key={language} value={language}>
-              {language}
+          {LANGUAGE_OPTIONS.map((languageOption) => (
+            <option key={languageOption.value} value={languageOption.value}>
+              {languageOption.label}
             </option>
           ))}
         </select>

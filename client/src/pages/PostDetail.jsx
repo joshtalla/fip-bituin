@@ -19,6 +19,7 @@ import { supabase } from "../services/supabaseClient";
 import { savePost, unsavePost } from "../services/savedPostService";
 
 const REPLY_PAGE_SIZE = 100;
+const getTranslatedText = (result) => result?.translated_text || result?.translatedText || result?.text || "";
 
 function formatTimestamp(value) {
   if (!value) {
@@ -49,6 +50,9 @@ export default function PostDetail() {
   const [error, setError] = useState(null);
   const [isReplyComposerOpen, setIsReplyComposerOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [translatedPostContent, setTranslatedPostContent] = useState("");
+  const [translatedReplies, setTranslatedReplies] = useState({});
+  const [translatingReplyIds, setTranslatingReplyIds] = useState({});
   const [isLiked, setIsLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -56,15 +60,49 @@ export default function PostDetail() {
 
   // Handles translation of the post content
   const handleTranslate = async () => {
-    if (!post || translating) return;
+    if (!post?.content || translating) return;
     setTranslating(true);
     try {
-      const userId = user?.id || user?.auth_user_id;
-      const result = await translatePost({ text: post.content, userId });
-      setPost((current) => current ? { ...current, content: result.translatedText || result.text || result } : current);
+      const result = await translatePost({
+        text: post.content,
+        sourceLanguage: post.language,
+      });
+      setTranslatedPostContent(getTranslatedText(result) || post.content);
     } catch (err) {
+      alert(err.message || "Failed to translate post.");
     } finally {
       setTranslating(false);
+    }
+  };
+
+  const handleReplyTranslate = async (reply) => {
+    if (!reply?.id || !reply.content || translatingReplyIds[reply.id]) {
+      return;
+    }
+
+    setTranslatingReplyIds((current) => ({
+      ...current,
+      [reply.id]: true,
+    }));
+
+    try {
+      const result = await translatePost({
+        text: reply.content,
+        sourceLanguage: reply.language,
+      });
+
+      setTranslatedReplies((current) => ({
+        ...current,
+        [reply.id]: getTranslatedText(result) || reply.content,
+      }));
+    } catch (err) {
+      alert(err.message || "Failed to translate reply.");
+    } finally {
+      setTranslatingReplyIds((current) => {
+        const nextState = { ...current };
+        delete nextState[reply.id];
+        return nextState;
+      });
     }
   };
 
@@ -167,6 +205,9 @@ export default function PostDetail() {
 
         setPost(loadedPost);
         setReplies(loadedReplies.replies || []);
+        setTranslatedPostContent("");
+        setTranslatedReplies({});
+        setTranslatingReplyIds({});
       } catch (loadError) {
         if (!cancelled) {
           setError(loadError.status === 404 ? "Post not found." : "Failed to load post.");
@@ -263,11 +304,10 @@ export default function PostDetail() {
                 {post.anonymous_name || "username"}
               </p>
             </div>
-
-            {post.content && (
+            {(translatedPostContent || post.content) && (
               <div className="mt-7 max-w-4xl">
                 <p className="whitespace-pre-wrap font-poppins text-[18px] leading-[1.55] text-[#4C383A] sm:text-[20px] lg:text-[22px]">
-                  {post.content}
+                  {translatedPostContent || post.content}
                 </p>
               </div>
             )}
@@ -350,8 +390,11 @@ export default function PostDetail() {
             <ReplyThread
               replies={replies}
               onReplySubmit={handleReplySubmit}
+              onTranslateReply={handleReplyTranslate}
               formatTimestamp={formatTimestamp}
               currentUsername={user?.username}
+              translatedReplies={translatedReplies}
+              translatingReplyIds={translatingReplyIds}
             />
           </section>
         )}

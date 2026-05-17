@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { CgProfile } from "react-icons/cg";
-import { IoLocationOutline } from "react-icons/io5";
 import {
 	LuCornerDownRight,
 	LuMessageCircle,
@@ -14,10 +13,16 @@ export default function ReplyCard({
 	reply,
 	nestedReplies,
 	onReplySubmit,
+	onTranslate,
 	formatTimestamp,
 	isOwnedByCurrentUser,
+	translatedContent,
+	translatedReplies,
+	translatingReplyIds,
 }) {
 	const [isReplying, setIsReplying] = useState(false);
+	const displayContent = translatedContent ?? reply.content;
+	const isTranslating = Boolean(translatingReplyIds?.[reply.id]);
 
 	return (
 		<article className="flex gap-3 text-[#4C383A]">
@@ -35,10 +40,6 @@ export default function ReplyCard({
 							<h3 className="font-poppins text-[18px] font-semibold leading-none text-[#4C383A] sm:text-[20px]">
 								{reply.anonymous_name || "Anonymous"}
 							</h3>
-							<span className="inline-flex items-center gap-2 font-poppins text-[15px] font-medium text-[#5C4548] sm:text-[16px]">
-								<IoLocationOutline className="text-[18px]" />
-								location, country
-							</span>
 						</div>
 
 						<div className="mt-2 flex items-center gap-2 font-poppins text-[13px] font-medium text-[#5C4548]">
@@ -58,9 +59,9 @@ export default function ReplyCard({
 					)}
 				</div>
 
-				{reply.content && (
+				{displayContent && (
 					<p className="mt-3 max-w-3xl whitespace-pre-wrap font-poppins text-[15px] leading-7 text-[#4C383A] sm:text-[16px]">
-						{reply.content}
+						{displayContent}
 					</p>
 				)}
 
@@ -74,9 +75,14 @@ export default function ReplyCard({
 				)}
 
 				<div className="mt-3 flex flex-wrap items-center gap-4">
-					<span className="inline-flex min-w-[125px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-4 py-2 font-darumadropone text-[22px] leading-none text-[#4C383A] shadow-[0_6px_18px_rgba(140,151,188,0.35)]">
-						translate
-					</span>
+					<button
+						type="button"
+						onClick={() => onTranslate?.(reply)}
+						disabled={isTranslating || !reply.content}
+						className="inline-flex min-w-[125px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-4 py-2 font-darumadropone text-[22px] leading-none text-[#4C383A] shadow-[0_6px_18px_rgba(140,151,188,0.35)] disabled:opacity-60"
+					>
+						{isTranslating ? "translating..." : "translate"}
+					</button>
 					<button
 						type="button"
 						onClick={() => setIsReplying((current) => !current)}
@@ -105,7 +111,10 @@ export default function ReplyCard({
 						<NestedReplyCard
 							key={nestedReply.id}
 							reply={nestedReply}
+							onTranslate={onTranslate}
 							formatTimestamp={formatTimestamp}
+							translatedContent={translatedReplies?.[nestedReply.id]}
+							isTranslating={Boolean(translatingReplyIds?.[nestedReply.id])}
 						/>
 					))}
 				</div>

@@ -22,6 +22,7 @@
 
 const supabase = require('../supabaseClient');
 const { normalizeMediaPayload } = require('./postService');
+const { normalizeLanguageCode } = require('./languageService');
 
 /**
  * Create a top-level reply.
@@ -261,14 +262,16 @@ exports.getUserProfile = async (authUserId) => {
         throw error;
     }
 
-    if (!data?.username || !data?.language) {
+    const normalizedLanguage = normalizeLanguageCode(data?.language);
+
+    if (!data?.username || !normalizedLanguage) {
         throw new Error('User profile not found');
     }
 
     return {
         id: data.id,
         anonymous_name: data.username,
-        language: data.language
+        language: normalizedLanguage
     };
 };
 

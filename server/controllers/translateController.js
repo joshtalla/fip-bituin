@@ -1,5 +1,6 @@
 
 const translationService = require('../services/translationService');
+const { normalizeLanguageCode } = require('../services/languageService');
 const supabase = require('../supabaseClient');
 
 
@@ -21,7 +22,7 @@ const translate = async (req, res) => {
      */
 
     try {
-        const { text, source } = req.body || {};
+        const { text, source, sourceLanguage } = req.body || {};
         if (!text) return res.status(400).json({ error: 'Text is required for translation' });
 
         // Check that user is authenticated
@@ -39,17 +40,11 @@ const translate = async (req, res) => {
         const { data: profile, error: profileError } = await supabase
             .from('users')
             .select('language')
-            .eq('id', userId)
+            .eq('auth_user_id', userId)
             .single();
         if (profileError || !profile) return res.status(400).json({ error: 'User profile not found' });
-        const target = profile.language;
+        const target = normalizeLanguageCode(profile.language);
         if (!target) return res.status(400).json({ error: 'User preferred language is not set' });
-
-        // Only allow English and Tagalog
-        const allowedLanguages = ['en', 'tl'];
-        if (!allowedLanguages.includes(target)) {
-            return res.status(400).json({ error: 'Translation is only available for English and Tagalog. Please set your language to English or Tagalog in your profile.' });
-        }
 
         // Check if target language is supported by using getSupportedLanguages() from translationService
         let supported = [];
@@ -64,15 +59,15 @@ const translate = async (req, res) => {
         }
 
         // Detect source language if not provided by using dectLanguage() from translationService
-        let detected = source || null;
+        let detected = normalizeLanguageCode(sourceLanguage || source) || null;
         try {
             if (!detected) detected = await translationService.detectLanguage(text);
         } catch (err) {
             console.warn('Language detection failed, continuing with auto');
         }
-        if (detected && !allowedLanguages.includes(detected)) {
-            return res.status(400).json({ error: 'Only English and Tagalog text can be translated at this time.' });
-        }
+
+        detected = normalizeLanguageCode(detected) || null;
+
         if (detected && detected === target) {
             return res.json({
                 original_text: text,
@@ -85,7 +80,7 @@ const translate = async (req, res) => {
         }
 
         // Translate the text(Main functionality) by calling the translationText() from translationService
-        const data = await translationService.translateText(text, target, source || 'auto');
+    const data = await translationService.translateText(text, target, detected || 'auto');
         const translated_text = data && (data.translatedText || data.translated_text || data.result || data.translation || null);
         if (!translated_text) {
             return res.status(502).json({ error: 'Sorry, something went wrong with the translation service.' });
@@ -99,6 +94,12 @@ const translate = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
+
+        const message = err?.message || 'Server error';
+        if (message.includes('LibreTranslate')) {
+            return res.status(502).json({ error: message });
+        }
+
         return res.status(500).json({ error: 'Server error' });
     }
 };

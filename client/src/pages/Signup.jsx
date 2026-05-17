@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { signUp } from "../services/authService";
+import { LANGUAGE_OPTIONS, getLanguageLabel } from "../utils/language";
 import "./Auth.css";
 
 // static dropdown options for form
@@ -15,16 +16,6 @@ const locations = [
   "United States",
   "United Kingdom",
 ];
-
-const languages = [
-  "English",
-  "French",
-  "Ilocano",
-  "Kapampangan",
-  "Tagalog",
-  "Waray",
-];
-
 
 // validation schema for signup form
 // ensures all fields are filled and valid for submission
@@ -219,7 +210,7 @@ export default function Signup() {
                     }}
                   >
                     <span className={selectedLanguage ? "selected" : "placeholder"}>
-                      {selectedLanguage || "choose language"}
+                      {selectedLanguage ? getLanguageLabel(selectedLanguage) : "choose language"}
                     </span>
                     <span className="custom-dropdown-arrow">
                       {languageOpen ? "⌃" : "⌄"}
@@ -228,20 +219,20 @@ export default function Signup() {
 
                   {languageOpen && (
                     <div className="custom-dropdown-menu">
-                      {languages.map((language) => (
+                      {LANGUAGE_OPTIONS.map((languageOption) => (
                         <button
-                          key={language}
+                          key={languageOption.value}
                           type="button"
                           className="custom-dropdown-option"
                           onClick={() => {
-                            setValue("language", language, {
+                            setValue("language", languageOption.value, {
                               shouldValidate: true,
                               shouldDirty: true,
                             });
                             setLanguageOpen(false);
                           }}
                         >
-                          {language}
+                          {languageOption.label}
                         </button>
                       ))}
                     </div>

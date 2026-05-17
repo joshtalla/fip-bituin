@@ -1,4 +1,4 @@
-const LIBRE_URL = process.env.LIBRETRANSLATE_URL || 'https://libretranslate.com';
+const LIBRE_URL = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5000';
 const API_KEY = process.env.LIBRETRANSLATE_API_KEY || '';
 
 
@@ -13,14 +13,32 @@ async function fetchJson(url, opts = {}) {
      * 
      * @returns {Promise<any>} - The parsed JSON response from the server.
      */
+      try {
+          const res = await fetch(url, opts);
+          if (!res.ok) {
+              const errorText = await res.text();
 
-      const res = await fetch(url, opts);
-      if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`Fetch failed: ${res.status} ${res.statusText} - ${errorText}`);
+              if (res.status === 400 && errorText.includes('Visit https://portal.libretranslate.com to get an API key')) {
+                  throw new Error(
+                      'LibreTranslate rejected this request because the public hosted API requires a paid key. ' +
+                      'Run the self-hosted instance at ' + LIBRE_URL + ' or set LIBRETRANSLATE_URL to your own deployment.'
+                  );
+              }
+
+              throw new Error(`Fetch failed: ${res.status} ${res.statusText} - ${errorText}`);
+          }
+
+          return res.json();
+      } catch (error) {
+          if (error instanceof TypeError) {
+              throw new Error(
+                  'Unable to reach LibreTranslate at ' + LIBRE_URL + '. ' +
+                  'Start the self-hosted service with "npm run translate" or set LIBRETRANSLATE_URL to a reachable instance.'
+              );
+          }
+
+          throw error;
       }
-      
-      return res.json();
 }
 
 

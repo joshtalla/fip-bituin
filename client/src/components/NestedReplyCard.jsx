@@ -1,9 +1,16 @@
 import { CgProfile } from "react-icons/cg";
-import { IoLocationOutline } from "react-icons/io5";
 import { LuCornerDownRight, LuMessageCircle } from "react-icons/lu";
 import MediaAttachment from "./MediaAttachment";
 
-export default function NestedReplyCard({ reply, formatTimestamp }) {
+export default function NestedReplyCard({
+	reply,
+	formatTimestamp,
+	onTranslate,
+	translatedContent,
+	isTranslating,
+}) {
+	const displayContent = translatedContent ?? reply.content;
+
 	return (
 		<article className="flex gap-3 text-[#4C383A]">
 			<div className="pt-1 text-[22px] text-[#6B575A]">
@@ -18,10 +25,6 @@ export default function NestedReplyCard({ reply, formatTimestamp }) {
 					<p className="font-poppins text-[15px] font-semibold leading-none sm:text-[17px]">
 						{reply.anonymous_name || "Anonymous"}
 					</p>
-					<span className="inline-flex items-center gap-2 font-poppins text-[14px] font-medium text-[#5C4548]">
-						<IoLocationOutline className="text-[16px]" />
-						location, country
-					</span>
 				</div>
 
 				<div className="mt-2 flex items-center gap-2 font-poppins text-[13px] font-medium text-[#5C4548]">
@@ -30,9 +33,9 @@ export default function NestedReplyCard({ reply, formatTimestamp }) {
 					<span className="text-[#866a6e]">{formatTimestamp(reply.created_at)}</span>
 				</div>
 
-				{reply.content && (
+				{displayContent && (
 					<p className="mt-3 max-w-2xl whitespace-pre-wrap font-poppins text-[14px] leading-7 text-[#4C383A] sm:text-[15px]">
-						{reply.content}
+						{displayContent}
 					</p>
 				)}
 
@@ -44,6 +47,15 @@ export default function NestedReplyCard({ reply, formatTimestamp }) {
 						imageClassName="max-h-[260px]"
 					/>
 				)}
+
+				<button
+					type="button"
+					onClick={() => onTranslate?.(reply)}
+					disabled={isTranslating || !reply.content}
+					className="mt-3 inline-flex min-w-[110px] items-center justify-center rounded-[8px] bg-[#8C97BC] px-4 py-2 font-darumadropone text-[20px] leading-none text-[#4C383A] shadow-[0_6px_18px_rgba(140,151,188,0.35)] disabled:opacity-60"
+				>
+					{isTranslating ? "translating..." : "translate"}
+				</button>
 			</div>
 		</article>
 	);

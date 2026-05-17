@@ -1,0 +1,17 @@
+services:
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: fip-bituin-libretranslate
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      LT_HOST: 0.0.0.0
+      LT_PORT: 5000
+      LT_LOAD_ONLY: en,fr,tl
+      LT_UPDATE_MODELS: true
+    volumes:
+      - libretranslate_models:/home/libretranslate/.local
+
+volumes:
+  libretranslate_models:

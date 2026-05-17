@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient";
+import { normalizeLanguageCode } from "../utils/language";
 
 const FILIPINO_AMERICAN_PREFIXES = [
   "Manila",
@@ -40,6 +41,7 @@ const buildUsername = (username) => {
 
 export const ensureUserProfile = async ({ authUserId, location, language, username }) => {
   const resolvedUsername = buildUsername(username);
+  const normalizedLanguage = normalizeLanguageCode(language);
 
   const { data: existingProfile, error: existingProfileError } = await supabase
     .from("users")
@@ -53,6 +55,7 @@ export const ensureUserProfile = async ({ authUserId, location, language, userna
 
   if (existingProfile) {
     const updates = {};
+    const existingLanguageCode = normalizeLanguageCode(existingProfile.language);
 
     if (!existingProfile.username) {
       updates.username = resolvedUsername;
@@ -60,8 +63,10 @@ export const ensureUserProfile = async ({ authUserId, location, language, userna
     if (location && !existingProfile.country) {
       updates.country = location;
     }
-    if (language && !existingProfile.language) {
-      updates.language = language;
+    if (existingLanguageCode && existingLanguageCode !== existingProfile.language) {
+      updates.language = existingLanguageCode;
+    } else if (normalizedLanguage && !existingLanguageCode) {
+      updates.language = normalizedLanguage;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -88,7 +93,7 @@ export const ensureUserProfile = async ({ authUserId, location, language, userna
       auth_user_id: authUserId,
       username: resolvedUsername,
       country: location || null,
-      language: language || null,
+      language: normalizedLanguage || null,
     })
     .select()
     .single();
@@ -102,13 +107,14 @@ export const ensureUserProfile = async ({ authUserId, location, language, userna
 
 export const signUp = async ({ email, password, location, language }) => {
   const username = buildUsername();
+  const normalizedLanguage = normalizeLanguageCode(language);
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         country: location,
-        language,
+        language: normalizedLanguage || null,
         username,
       },
     },
@@ -123,7 +129,7 @@ export const signUp = async ({ email, password, location, language }) => {
       authUserId: data.user.id,
       email,
       location,
-      language,
+      language: normalizedLanguage,
       username,
     });
   }
@@ -157,10 +163,10 @@ export const updateUserLanguage = async ({ authUserId, language }) => {
     throw new Error("Authenticated user is required");
   }
 
-  const normalizedLanguage = typeof language === "string" ? language.trim() : "";
+  const normalizedLanguage = normalizeLanguageCode(language);
 
   if (!normalizedLanguage) {
-    throw new Error("Language is required");
+    throw new Error("Choose a valid language");
   }
 
   const { data, error } = await supabase

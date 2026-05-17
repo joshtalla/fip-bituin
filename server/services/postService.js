@@ -1,4 +1,5 @@
 const supabase = require('../supabaseClient');
+const { normalizeLanguageCode } = require('./languageService');
 
 const POST_LIST_COLUMNS = 'id, prompt_id, anonymous_name, content, media_url, media_type, media_width, media_height, likes_count, reply_count, created_at';
 const POST_DETAIL_COLUMNS = 'id, prompt_id, user_id, anonymous_name, content, category, language, country, media_url, media_type, media_width, media_height, is_flagged, likes_count, reply_count, created_at, updated_at';
@@ -108,10 +109,12 @@ const resolveUserProfile = async (authUser) => {
   }
 
   const username = buildUsername(authUser.user_metadata?.username);
-  const language = existingUser?.language ?? authUser.user_metadata?.language ?? null;
+  const existingLanguage = normalizeLanguageCode(existingUser?.language);
+  const metadataLanguage = normalizeLanguageCode(authUser.user_metadata?.language);
+  const language = existingLanguage || metadataLanguage || null;
 
   if (existingUser?.id) {
-    if (existingUser.username && existingUser.language === language) {
+    if (existingUser.username && existingLanguage === language && existingUser.language === language) {
       return existingUser;
     }
 
@@ -121,7 +124,7 @@ const resolveUserProfile = async (authUser) => {
       updates.username = username;
     }
 
-    if (!existingUser.language && language) {
+    if (language && existingUser.language !== language) {
       updates.language = language;
     }
 

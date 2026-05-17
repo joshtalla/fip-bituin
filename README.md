@@ -64,6 +64,7 @@ Create `server/.env`:
 ```bash
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_KEY=your-supabase-service-role-key
+LIBRETRANSLATE_URL=http://127.0.0.1:5000
 ```
 
 Notes:
@@ -73,6 +74,45 @@ Notes:
 - If the server logs `Missing Supabase credentials`, the backend env is missing or not loaded.
 - If browser login fails with `401 Unauthorized` from `/auth/v1/token?grant_type=password`, first verify the client is using the anon key, not the service role key.
 - After changing env files, restart both the Vite client and the Express server.
+
+### LibreTranslate Self-Hosting
+
+The app is configured to use a self-hosted LibreTranslate instance by default instead of the paid public `libretranslate.com` endpoint.
+
+Start LibreTranslate locally with Docker:
+
+```bash
+npm run translate
+```
+
+This starts a container on `http://127.0.0.1:5000`, which is the default URL used by the server translation service.
+
+The command now waits until the LibreTranslate API is actually reachable before exiting. On the first run this may take a few minutes while models are downloaded.
+
+This repo's bundled LibreTranslate setup has been verified with `en`, `fr`, and `tl`.
+
+Stop it with:
+
+```bash
+npm run translate:stop
+```
+
+If Docker is already installed and you want the raw compose command, you can also run:
+
+```bash
+npm run translate:docker
+```
+
+Notes:
+
+- If you host LibreTranslate elsewhere, set `LIBRETRANSLATE_URL` in `server/.env` to that internal or public URL.
+- `LIBRETRANSLATE_API_KEY` is optional for self-hosting and should usually be left unset unless you enable API keys on your own instance.
+- The first container start may take longer while models are downloaded.
+- The included Docker setup is currently intended for `en`, `fr`, and `tl`. If you need more LibreTranslate-supported languages, add them to `LT_LOAD_ONLY` in [docker-compose.libretranslate.yml](docker-compose.libretranslate.yml) and verify they are exposed by `/languages` in your local image.
+- On Windows, Docker Desktop is the simplest way to run the included compose file.
+- If `npm run translate` says Docker is not installed, install Docker Desktop and reopen your terminal before retrying.
+- If `npm run translate` says the Docker engine is not running, open Docker Desktop first and wait for it to finish starting before retrying.
+- If you prefer not to use Docker, install Python 3.8+ and run LibreTranslate yourself, then point `LIBRETRANSLATE_URL` at that instance.
 
 ### Running the Application
 

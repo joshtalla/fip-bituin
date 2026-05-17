@@ -3,8 +3,11 @@ import ReplyCard from "./ReplyCard";
 export default function ReplyThread({
 	replies,
 	onReplySubmit,
+	onTranslateReply,
 	formatTimestamp,
 	currentUsername,
+	translatedReplies,
+	translatingReplyIds,
 }) {
 	const nestedRepliesByParentId = replies.reduce((replyMap, reply) => {
 		if (!reply.parent_reply_id) {
@@ -31,8 +34,12 @@ export default function ReplyThread({
 					reply={reply}
 					nestedReplies={nestedRepliesByParentId.get(reply.id) || []}
 					onReplySubmit={onReplySubmit}
+					onTranslate={onTranslateReply}
 					formatTimestamp={formatTimestamp}
 					isOwnedByCurrentUser={reply.anonymous_name === currentUsername}
+					translatedContent={translatedReplies?.[reply.id]}
+					translatingReplyIds={translatingReplyIds}
+					translatedReplies={translatedReplies}
 				/>
 			))}
 		</div>

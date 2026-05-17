@@ -6,6 +6,9 @@
   "scripts": {
     "client": "npm run dev --prefix client",
     "server": "npm run dev --prefix server",
+    "translate": "node scripts/libretranslate.cjs start",
+    "translate:docker": "docker compose -f docker-compose.libretranslate.yml up -d",
+    "translate:stop": "node scripts/libretranslate.cjs stop",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "start": "concurrently \"npm start --prefix server\" \"npm run build --prefix client\"",
     "test": "echo \"Error: no test specified\" && exit 1"
