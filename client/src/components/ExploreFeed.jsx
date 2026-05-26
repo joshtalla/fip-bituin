@@ -61,7 +61,7 @@ function Pagination({ page, totalPages, loading, onPrevious, onNext }) {
         type="button"
         onClick={onPrevious}
         disabled={page === 1 || loading}
-        className="h-[44px] rounded-lg bg-[#EFB758] px-4 py-2 font-poppins text-[#4C383A] disabled:cursor-not-allowed disabled:opacity-50"
+        className="h-[44px] cursor-pointer rounded-lg bg-[#EFB758] px-4 py-2 font-poppins text-[#4C383A] disabled:cursor-not-allowed disabled:opacity-50"
       >
         Previous
       </button>
@@ -74,7 +74,7 @@ function Pagination({ page, totalPages, loading, onPrevious, onNext }) {
         type="button"
         onClick={onNext}
         disabled={page === totalPages || loading}
-        className="h-[44px] rounded-lg bg-[#EFB758] px-4 py-2 font-poppins text-[#4C383A] disabled:cursor-not-allowed disabled:opacity-50"
+        className="h-[44px] cursor-pointer rounded-lg bg-[#EFB758] px-4 py-2 font-poppins text-[#4C383A] disabled:cursor-not-allowed disabled:opacity-50"
       >
         Next
       </button>
@@ -155,6 +155,9 @@ function ExplorePosts({
                     username={post.anonymous_name}
                     country={post.country}
                     content={post.content}
+                    mediaUrl={post.media_url}
+                    mediaWidth={post.media_width}
+                    mediaHeight={post.media_height}
                     placement={hoveredStar.placement}
                     verticalAlign={isFirstRow ? "below" : "above"}
                   />

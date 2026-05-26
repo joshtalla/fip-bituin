@@ -71,7 +71,7 @@ const Explore = () => {
   const isSearching = Boolean(queryFromUrl.trim());
 
   return (
-    <div className="min-h-screen w-full overflow-hidden px-[24px] pt-[4px] pb-[32px] md:px-[60px] md:pt-[56px] md:pb-[72px]">
+    <div className="min-h-screen w-full overflow-hidden px-[24px] pt-[4px] md:px-[60px] md:pt-[24px] lg:pt-[32px]">
       {isSearching ? (
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
           <div className="flex flex-col gap-4">
@@ -93,7 +93,9 @@ const Explore = () => {
           </div>
 
           {loading && (
-            <p className="font-poppins text-[18px] text-[#FBF3E5]">Loading results...</p>
+            <p className="font-poppins text-[18px] text-[#FBF3E5]">
+              Loading results...
+            </p>
           )}
 
           {!loading && error && (
